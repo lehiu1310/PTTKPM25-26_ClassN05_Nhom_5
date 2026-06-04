@@ -1,8 +1,8 @@
-# Monex - Quan Ly Tai Chinh Ca Nhan
+# Monex - Quản Lý Tài Chính Cá Nhân
 
-Repository bai tap lon hoc phan Phan tich va thiet ke phan mem.
+Repository bài tập lớn môn phân tích và thiết kế phần mềm
 
-## Cau Truc Theo Yeu Cau
+## Cấu Trúc Theo Yêu Cầu
 
 ```text
 Quan-Ly-Tai-Chinh-Monex/
@@ -13,53 +13,53 @@ Quan-Ly-Tai-Chinh-Monex/
 `-- README.md       # Thong tin du an
 ```
 
-## Thong Tin Du An
+## Thông Tin Dự Án
 
-- Ten du an: Monex - Quan ly tai chinh ca nhan
-- Nen tang: Android
+- Tên dự án: Monex - Quan ly tai chinh ca nhan
+- Nền tảng: Android
 - Framework: Flutter
-- Ngon ngu: Dart
-- Luu tru du lieu: SharedPreferences
+- Ngôn ngữ: Dart
+- Lưu trữ dữ liệu: SharedPreferences
 - IDE: Android Studio
 
-## Chuc Nang Chinh
+## Chức Năng Chính
 
-- Dang ky, dang nhap, dang xuat tai khoan.
-- Tach du lieu thu chi theo tung tai khoan.
-- Them thu nhap, chi phi, danh muc va ngay giao dich.
-- Nhap giao dich cua thang truoc/nam truoc.
-- Thong ke theo thang va nam, khong cong don sai giua cac thang.
-- Quan ly tiet kiem theo muc tieu, nap/rut tien nhieu lan.
-- Tao hoa don, loi nhac va thong bao cuc bo.
-- Tro ly chi tieu dua tren du lieu thuc.
-- Xuat bao cao PDF/Excel.
+- Đăng ký, đăng nhập, đăng xuất tài khỏan.
+- Tách dữ liệu thu chi theo từng tài khỏan.
+- Thêm thu nhập, chi phí, danh mục và ngày giao dịch.
+- Nhập giao dịch của tháng trước/năm trước.
+- Thống kê theo tháng và năm, không cộng dồn sai giữa các tháng.
+- Quản lý tiết kiệm theo mục tiêu, nạp/rút tiền nhiều lần.
+- Tạo hóa đơn, lời nhắc và thông báo cục bộ.
+- Trợ lý AI chi tiêu dựa trên dữ liệu thực.
+- Xuất báo cáo PDF/Excel.
 
 ## Source Code
 
-Source Flutter nam tai:
+Source Flutter nằm tại:
 
 ```text
 SRC/monex
 ```
 
-Mo project bang Android Studio tai thu muc:
+Mở project bằng Android Studio tại thư mục:
 
 ```text
 D:\HOC_TAP\quan_ly_tai_chinh\monex\SRC\monex
 ```
 
-Khong mo thu muc cha `D:\HOC_TAP\quan_ly_tai_chinh\monex` neu muon chay app, vi thu muc cha chi la repository tong hop tai lieu + source.
+Không mở thu mục cha `D:\HOC_TAP\quan_ly_tai_chinh\monex` nếu muốn chạy app, vì thư mục cha chỉ là repository tổng hợp tài liệu + source.
 
-## Chay App
+## Chạy App
 
 Trong Android Studio:
 
 1. File -> Open.
-2. Chon `D:\HOC_TAP\quan_ly_tai_chinh\monex\SRC\monex`.
-3. Chon Android Emulator.
-4. Bam Run.
+2. Chọn `D:\HOC_TAP\quan_ly_tai_chinh\monex\SRC\monex`.
+3. Chọn Android Emulator.
+4. Bấm Run.
 
-Hoac build debug bang Gradle:
+Hoặc build debug bằng Gradle:
 
 ```powershell
 cd D:\HOC_TAP\quan_ly_tai_chinh\monex\SRC\monex\android
@@ -72,7 +72,7 @@ APK debug sau khi build:
 SRC/monex/build/app/outputs/flutter-apk/app-debug.apk
 ```
 
-## Tai Khoan Demo
+## Tài Khoản Demo
 
 ```text
 Username: minh
@@ -80,19 +80,17 @@ Email: minh@monex.vn
 Password: 123456
 ```
 
-## Tai Lieu
+## Tài Liệu
 
-- Ke hoach du an: `Documents/Project_Plan.md`
+- Kế hoạch dự án: `Documents/Project_Plan.md`
 - SRS: `Documents/SRS.md`
-- Bao cao hang tuan: `Documents/Weekly_Report.md`
-- Bao cao du an: `Documents/Project_Report.md`
-- Bao cao PDF: `Documents/Bao_cao_Monex.pdf`
-- Thiet ke kien truc: `Design/Architecture.md`
-- Thiet ke chuong trinh: `Design/Program_Design.md`
-- Thiet ke du lieu: `Design/Data_Design.md`
+- Báo cáo hàng tuan: `Documents/Weekly_Report.md`
+- Báo cáo dự án: `Documents/Project_Report.md`
+- Báo cáo PDF: `Documents/Bao_cao_Monex.pdf`
+- Thiết kế kiến trúc: `Design/Architecture.md`
+- Thiết kế chương trình: `Design/Program_Design.md`
+- Thiết kế dữ liệu: `Design/Data_Design.md`
 
-## Ghi Chu Git
+## Ghi Chú Git
 
-- Cac thu muc build/cache nhu `.runtime`, `.dart_tool`, `build` khong dua len GitHub.
-- File/thu muc khong phuc vu yeu cau hoc phan da duoc loai khoi Git de repository gon hon.
-- Giang vien se duoc chu repository add vao GitHub theo yeu cau rieng.
+- Các thư mục build/cache như `.runtime`, `.dart_tool`, `build` không đưa lên GitHub.
