@@ -33,6 +33,11 @@ migrate_working_dir/
 .pub/
 .runtime/
 /build/
+SRC/monex/build/
+SRC/monex/.dart_tool/
+SRC/monex/.flutter-plugins
+SRC/monex/.flutter-plugins-dependencies
+SRC/monex/.pub/
 
 # Symbolication related
 app.*.symbols
@@ -47,3 +52,14 @@ app.*.map.json
 
 # Temporary screenshots created while testing locally
 tmp_*.png
+
+# Removed generated Flutter targets not required for this Android coursework repo
+/ios/
+/linux/
+/macos/
+/web/
+/windows/
+/reports/
+/.metadata
+/.flutter-plugins-dependencies
+/monex.iml

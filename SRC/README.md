@@ -1,32 +1,22 @@
 # SRC
 
-Theo yeu cau hoc phan, thu muc `SRC` dung de chi ra source code chuong trinh.
-
-Voi Flutter, project Monex dang duoc dat o root repository de Android Studio co the mo truc tiep:
+Thu muc nay chua source code chuong trinh theo yeu cau hoc phan.
 
 ```text
-android/
-ios/
-lib/
-linux/
-macos/
-web/
-windows/
-pubspec.yaml
+SRC/
+`-- monex/       # Flutter Android project
 ```
 
-Source code chinh can cham diem nam trong:
+Cac thanh phan chinh:
+
+- `monex/lib/`: source Dart/Flutter.
+- `monex/android/`: cau hinh Android.
+- `monex/pubspec.yaml`: dependency Flutter.
+- `monex/test/`: test.
+- `monex/tools/`: script ho tro build/analyze tren o D.
+
+Khi chay app bang Android Studio, mo thu muc:
 
 ```text
-lib/
+SRC/monex
 ```
-
-Trong do:
-
-- `lib/data/`: model va state.
-- `lib/screens/`: giao dien.
-- `lib/services/`: thong bao, bao cao, insight, home widget.
-- `lib/theme/`: theme va background.
-
-Khong di chuyen cac thu muc source vao `SRC` de tranh lam hong cau hinh Flutter/Android Studio hien tai. Thu muc nay dong vai tro mapping source code theo yeu cau to chuc BTL.
-

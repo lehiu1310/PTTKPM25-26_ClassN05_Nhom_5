@@ -5,7 +5,7 @@
 Vi tri:
 
 ```text
-lib/data/
+SRC/monex/lib/data/
 ```
 
 Chuc nang:
@@ -19,7 +19,7 @@ Chuc nang:
 Vi tri:
 
 ```text
-lib/screens/
+SRC/monex/lib/screens/
 ```
 
 Chuc nang:
@@ -36,7 +36,7 @@ Chuc nang:
 Vi tri:
 
 ```text
-lib/services/
+SRC/monex/lib/services/
 ```
 
 Chuc nang:
@@ -51,7 +51,7 @@ Chuc nang:
 Vi tri:
 
 ```text
-lib/theme/
+SRC/monex/lib/theme/
 ```
 
 Chuc nang:
@@ -59,4 +59,3 @@ Chuc nang:
 - Mau sac.
 - Theme sang/toi.
 - Background ung dung.
-

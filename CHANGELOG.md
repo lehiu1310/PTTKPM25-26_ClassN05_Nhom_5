@@ -2,9 +2,12 @@
 
 ## 2026-06-04
 
+- Don gon GitHub repository: dua Flutter Android project vao `SRC/monex`.
+- Xoa khoi Git cac target/platform khong can cho yeu cau hoc phan: iOS, web, Linux, macOS, Windows.
+- Xoa khoi Git cac file generated/IDE khong can thiet: `.metadata`, `.flutter-plugins-dependencies`, `monex.iml`.
+- Xoa thu muc `reports` bi trung, giu bao cao PDF trong `Documents`.
 - Sap xep lai repository theo yeu cau hoc phan: them `Documents`, `Design`, `SRC`, README va CHANGELOG.
 - Bo sung tai lieu ke hoach, SRS, bao cao hang tuan, tai lieu thiet ke va mapping source code.
-- Giu nguyen Flutter project o root repository de Android Studio van mo va build duoc theo cau hinh hien tai.
 
 ## 2026-06-01
 
@@ -25,4 +28,3 @@
 - Tach du lieu thu chi theo tung tai khoan.
 - Bo sung tiet kiem theo muc tieu, nap/rut tien tiet kiem.
 - Cai thien thong bao va tro ly chi tieu dua tren du lieu that.
-
