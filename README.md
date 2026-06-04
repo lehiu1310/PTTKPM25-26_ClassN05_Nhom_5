@@ -1,120 +1,112 @@
-# 💰 Monex - Ứng dụng quản lý tài chính cá nhân
+# Monex - Quan Ly Tai Chinh Ca Nhan
 
-Monex là ứng dụng quản lý tài chính cá nhân chạy trên Android, được xây dựng bằng Flutter.
+Monex la ung dung mobile quan ly thu nhap, chi tieu, tiet kiem, hoa don va thong bao tai chinh ca nhan. Ung dung duoc xay dung bang Flutter va chay tren Android Studio/Android Emulator.
 
-Ứng dụng hỗ trợ người dùng theo dõi thu nhập, chi phí, tiết kiệm, hóa đơn, biểu đồ phân tích và các cảnh báo tài chính thông minh dựa trên dữ liệu thật.
+Repo nay duoc sap xep lai theo yeu cau hoc phan Phan tich va thiet ke phan mem: co thu muc tai lieu, thiet ke, source code, README va CHANGELOG.
 
----
+## Thong Tin Du An
 
-## 🧱 Công nghệ sử dụng
+- Ten du an: Monex - Quan ly tai chinh ca nhan
+- Hoc phan: Phan tich va thiet ke phan mem
+- Nen tang: Android
+- Framework: Flutter
+- Ngon ngu: Dart
+- Luu tru du lieu: SharedPreferences
+- Repository GitHub: `lehiu1310/Quan-Ly-Tai-Chinh-Monex`
 
-- Mobile Framework: Flutter
-- Programming Language: Dart
-- State Management: ChangeNotifier
-- Local Storage: SharedPreferences
-- Chart: fl_chart
-- Local Notification: flutter_local_notifications
-- Home Widget: home_widget
-- PDF Export: pdf + printing
-- Excel Export: syncfusion_flutter_xlsio
-- File Sharing: share_plus
-- Animation: Lottie
-- IDE: Android Studio
+Ghi chu theo yeu cau giang vien:
 
----
+- Chu so huu repository se tu add giang vien vao GitHub.
+- Ten repository neu can doi theo mau cua lop/nhom: `PTTKPM25-26_ClassNx_NhomY`.
 
-## ✨ Chức năng chính
-
-- Đăng ký, đăng nhập và lưu tài khoản cục bộ.
-- Mỗi tài khoản có dữ liệu thu chi riêng, không bị lẫn với tài khoản khác.
-- Thêm thu nhập, chi phí và danh mục giao dịch.
-- Tìm kiếm, lọc giao dịch theo tên, loại và thời gian.
-- Quản lý mục tiêu tiết kiệm theo kiểu bỏ lợn đất: nạp tiền từng lần và rút tiền khi cần.
-- Tạo hóa đơn, lời nhắc và thông báo cục bộ.
-- Trợ lý tài chính/nhắc nhở chi tiêu dựa trên dữ liệu thật.
-- Biểu đồ phân tích thu chi và xu hướng theo tháng.
-- Xuất báo cáo PDF/Excel và chia sẻ file.
-- Hỗ trợ onboarding, dark mode, skeleton loading và home widget.
-
----
-
-## 📁 Cấu trúc thư mục
+## Cau Truc Repository
 
 ```text
 monex/
-├── android/                 # Cấu hình chạy Android
-├── lib/
-│   ├── data/                # AppState, model dữ liệu, preferences
-│   ├── screens/             # Các màn hình giao diện
-│   │   ├── auths/           # Đăng nhập, đăng ký, quên mật khẩu
-│   │   ├── onboarding/      # Màn hình giới thiệu lần đầu
-│   │   ├── pages/           # Tổng quan, thu chi, tiết kiệm, hóa đơn, phân tích
-│   │   └── widgets/         # Widget dùng lại trong app
-│   ├── services/            # Thông báo, báo cáo, trợ lý tài chính, home widget
-│   └── theme/               # Theme sáng/tối và nền ứng dụng
-├── reports/                 # Báo cáo PDF của ứng dụng
-├── tools/                   # Script hỗ trợ chạy, format, phân tích code
-├── pubspec.yaml             # Khai báo package Flutter
-└── README.md
+|-- Documents/              # Ke hoach, SRS, bao cao hang tuan, bao cao du an
+|-- Design/                 # Tai lieu thiet ke, kien truc, du lieu, sketch
+|-- SRC/                    # Ghi chu mapping source code theo yeu cau hoc phan
+|-- android/                # Cau hinh Android cua Flutter project
+|-- ios/                    # Cau hinh iOS cua Flutter project
+|-- lib/                    # Source code Dart/Flutter chinh
+|-- linux/                  # Generated Flutter desktop target
+|-- macos/                  # Generated Flutter desktop target
+|-- web/                    # Generated Flutter web target
+|-- windows/                # Generated Flutter desktop target
+|-- reports/                # Bao cao PDF da tao truoc do
+|-- test/                   # Test logic va widget
+|-- tools/                  # Script ho tro format, analyze, build
+|-- CHANGELOG.md            # Lich su thay doi
+|-- README.md               # Thong tin du an va huong dan chay
+|-- pubspec.yaml            # Khai bao package Flutter
+`-- pubspec.lock            # Khoa phien ban dependency
 ```
 
----
+Flutter project hien dang nam o root repository de Android Studio co the mo va build truc tiep. Thu muc `SRC/README.md` giai thich mapping source code theo yeu cau hoc phan.
 
-## ▶️ 1. Mở project bằng Android Studio
+## Chuc Nang Chinh
 
-Mở Android Studio, chọn:
+- Dang ky, dang nhap va dang xuat tai khoan.
+- Moi tai khoan co du lieu thu chi rieng.
+- Them thu nhap, chi phi va danh muc phat sinh.
+- Chon ngay giao dich de nhap du lieu cua thang truoc, nam truoc.
+- Thong ke theo thang va theo nam, khong cong don sai giua cac thang.
+- Quan ly tiet kiem theo kieu bo tien nhieu lan vao muc tieu.
+- Tao hoa don, loi nhac va thong bao cuc bo.
+- Tro ly chi tieu dua tren du lieu thuc cua tai khoan hien tai.
+- Bieu do thu chi, xu huong va danh muc chi phi.
+- Tim kiem, loc giao dich theo ten, danh muc, thoi gian.
+- Xuat bao cao PDF va Excel.
+- Ho tro onboarding, dark mode, skeleton loading va home widget.
 
-```text
-File -> Open
-```
+## Cong Nghe Su Dung
 
-Sau đó chọn đúng thư mục:
+- Flutter
+- Dart
+- ChangeNotifier
+- SharedPreferences
+- fl_chart
+- flutter_local_notifications
+- home_widget
+- pdf + printing
+- syncfusion_flutter_xlsio
+- share_plus
+- Android Studio
+
+## Mo Project Bang Android Studio
+
+Mo dung thu muc:
 
 ```text
 D:\HOC_TAP\quan_ly_tai_chinh\monex
 ```
 
-Không chọn thư mục cha `quan_ly_tai_chinh` vì trong đó có thể có các thư mục phụ không phải project Flutter chính.
+Khong mo thu muc cha `D:\HOC_TAP\quan_ly_tai_chinh` vi thu muc cha khong phai Flutter project.
 
----
-
-## ▶️ 2. Cài dependencies
-
-Tại thư mục gốc project, chạy:
+## Cai Dependency
 
 ```bash
 flutter pub get
 ```
 
-Hoặc trong Android Studio bấm nút:
+Neu dung runtime da cau hinh san tren o D, cac script trong `tools/` se giup han che ghi cache vao o C.
+
+## Chay Ung Dung
+
+Chay tren Android Studio bang nut Run, hoac build debug bang Gradle:
+
+```powershell
+cd D:\HOC_TAP\quan_ly_tai_chinh\monex\android
+.\gradlew.bat :app:assembleDebug -Ptarget-platform=android-x64 --no-daemon
+```
+
+File APK debug sau khi build:
 
 ```text
-Pub get
+build/app/outputs/flutter-apk/app-debug.apk
 ```
 
----
-
-## ▶️ 3. Chạy ứng dụng trên Android Studio
-
-Chọn Android Emulator hoặc thiết bị Android thật.
-
-Sau đó bấm nút Run trong Android Studio, hoặc chạy:
-
-```bash
-flutter run
-```
-
-Nếu dùng script đã chuẩn bị trong project:
-
-```bash
-tools\run_android_d.bat
-```
-
----
-
-## ▶️ 4. Đăng nhập hệ thống
-
-Tài khoản demo có sẵn:
+## Tai Khoan Demo
 
 ```text
 Username: minh
@@ -122,60 +114,32 @@ Email: minh@monex.vn
 Password: 123456
 ```
 
-Ngoài ra, người dùng có thể tự tạo tài khoản mới trong màn hình đăng ký.
+Nguoi dung cung co the tao tai khoan moi trong man hinh dang ky.
 
-Dữ liệu của mỗi tài khoản được lưu riêng, ví dụ tài khoản A sẽ không nhìn thấy thu chi của tài khoản B.
+## Tai Lieu Du An
 
----
+- Ke hoach du an: `Documents/Project_Plan.md`
+- SRS: `Documents/SRS.md`
+- Bao cao hang tuan: `Documents/Weekly_Report.md`
+- Bao cao du an: `Documents/Project_Report.md`
+- Bao cao PDF: `Documents/Bao_cao_Monex.pdf`
+- Thiet ke kien truc: `Design/Architecture.md`
+- Thiet ke chuong trinh va du lieu: `Design/Program_Design.md`, `Design/Data_Design.md`
 
-## ▶️ 5. Kiểm tra các chức năng chính
-
-Sau khi đăng nhập, có thể kiểm tra các chức năng:
-
-- Thêm thu nhập
-- Thêm chi phí
-- Thêm danh mục giao dịch
-- Tìm kiếm và lọc giao dịch
-- Tạo mục tiêu tiết kiệm
-- Nạp/rút tiền tiết kiệm
-- Tạo hóa đơn/lời nhắc
-- Xem thông báo thông minh
-- Xem biểu đồ phân tích
-- Xuất báo cáo PDF/Excel
-
----
-
-## ▶️ 6. Báo cáo PDF
-
-File báo cáo của ứng dụng nằm tại:
-
-```text
-reports/Bao_cao_Monex.pdf
-```
-
-Báo cáo trình bày tổng quan ứng dụng, yêu cầu hệ thống, công nghệ sử dụng, kiến trúc, thiết kế dữ liệu, kiểm thử, đánh giá và hướng phát triển.
-
----
-
-## ▶️ 7. Kiểm tra code
-
-Chạy phân tích Dart/Flutter:
+## Kiem Tra Code
 
 ```bash
 flutter analyze
 ```
 
-Hoặc dùng script:
+Hoac:
 
 ```bash
 tools\analyze_d.bat
 ```
 
----
+## Ghi Chu
 
-## 📝 Ghi chú
-
-- Project được cấu hình để chạy bằng Android Studio.
-- Dữ liệu hiện được lưu cục bộ bằng SharedPreferences.
-- Ứng dụng chưa dùng backend/cloud, phù hợp cho phạm vi demo học phần.
-- Các thư mục build/cache như `build`, `.dart_tool`, `.runtime` không được đưa lên GitHub.
+- Du lieu hien duoc luu cuc bo bang SharedPreferences.
+- Ung dung chua dung backend/cloud, phu hop pham vi demo hoc phan.
+- Cac thu muc build/cache nhu `build`, `.dart_tool`, `.runtime` khong dua len GitHub.
