@@ -47,10 +47,10 @@ Da kiem tra:
 - Them AI/phan tich chi tieu nang cao.
 - Them bieu do va bao cao chi tiet hon.
 
-## 7. File Bao Cao PDF
+## 7. File Bao Cao Hoc Phan
 
-Ban PDF hien co:
+Ban bao cao moi nhat:
 
 ```text
-Documents/Bao_cao_Monex.pdf
+Documents/Baocao_Monex.docx
 ```
