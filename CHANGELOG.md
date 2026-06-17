@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-06-17
+
+- Viết lại README tiếng Việt có dấu, trình bày đầy đủ thông tin dự án Monex.
+- Cập nhật báo cáo học phần mới `Documents/Baocao_Monex.docx`.
+- Bổ sung checklist đối chiếu yêu cầu Git trong `Documents/Git_Requirement_Checklist.md`.
+- Bổ sung sơ đồ use case SRS dạng draw.io.
+- Bổ sung sơ đồ kiến trúc dạng draw.io.
+- Bổ sung sketch/wireframe giao diện trong `Design/Sketches`.
+- Bổ sung slide trình bày dự án `Documents/Monex_Presentation.pptx`.
+- Mở rộng Weekly Report và tài liệu thiết kế để phù hợp yêu cầu bài tập lớn.
+
 ## 2026-06-05
 
 - Chuyen lai Flutter Android project ve thu muc goc `monex` de mo truc tiep bang Android Studio.

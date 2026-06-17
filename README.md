@@ -154,9 +154,14 @@ Người dùng cũng có thể tạo tài khoản mới trực tiếp trong màn
 | Báo cáo hàng tuần | `Documents/Weekly_Report.md` |
 | Báo cáo tổng hợp dự án | `Documents/Project_Report.md` |
 | Báo cáo học phần | `Documents/Baocao_Monex.docx` |
+| Slide trình bày | `Documents/Monex_Presentation.pptx` |
+| Checklist yêu cầu Git | `Documents/Git_Requirement_Checklist.md` |
+| Sơ đồ use case SRS | `Documents/SRS_UseCase.drawio` |
 | Thiết kế kiến trúc | `Design/Architecture.md` |
+| Sơ đồ kiến trúc | `Design/Architecture_Model.drawio` |
 | Thiết kế chương trình | `Design/Program_Design.md` |
 | Thiết kế dữ liệu | `Design/Data_Design.md` |
+| Sketch giao diện | `Design/Sketches/monex_mobile_wireframe.svg` |
 
 ## Trạng Thái Hiện Tại
 
@@ -164,6 +169,7 @@ Người dùng cũng có thể tạo tài khoản mới trực tiếp trong màn
 - Các chức năng chính đã hoàn thiện ở mức demo học phần.
 - Source code đã được tổ chức ở thư mục gốc repository để mở trực tiếp bằng Android Studio.
 - Tài liệu phân tích, kế hoạch, báo cáo và thiết kế đã được cập nhật trong repository.
+- Repository đã có checklist đối chiếu yêu cầu Git, sơ đồ draw.io, sketch giao diện và slide trình bày.
 
 ## Ghi Chú
 

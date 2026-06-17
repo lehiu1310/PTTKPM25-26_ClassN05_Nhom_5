@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net" modified="2026-06-17T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="monex-srs-usecase" name="Monex Use Case">
+    <mxGraphModel dx="1186" dy="733" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="system" value="Monex - Hệ thống quản lý tài chính cá nhân" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#0F766E;fontStyle=1;fontSize=18;" vertex="1" parent="1">
+          <mxGeometry x="250" y="70" width="620" height="610" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor-user" value="Người dùng" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="80" y="270" width="70" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor-notify" value="Hệ thống thông báo" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="970" y="270" width="90" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-login" value="Đăng ký / Đăng nhập" style="ellipse;whiteSpace=wrap;html=1;fillColor=#DFF7EF;strokeColor=#0F766E;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="130" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-transaction" value="Quản lý thu nhập và chi phí" style="ellipse;whiteSpace=wrap;html=1;fillColor=#DFF7EF;strokeColor=#0F766E;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="590" y="130" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-category" value="Thêm danh mục phát sinh" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ECFEFF;strokeColor=#0891B2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="240" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-analytics" value="Xem thống kê tháng/năm" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ECFEFF;strokeColor=#0891B2;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="590" y="240" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-saving" value="Quản lý mục tiêu tiết kiệm" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="350" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-reminder" value="Quản lý hóa đơn / lời nhắc" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="590" y="350" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-ai" value="Nhận cảnh báo và gợi ý AI Rule" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="470" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="uc-report" value="Xuất báo cáo PDF / Excel" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="590" y="470" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-user" target="uc-login"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-user" target="uc-transaction"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-user" target="uc-category"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-user" target="uc-analytics"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-user" target="uc-saving"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-user" target="uc-reminder"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-user" target="uc-report"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-notify" target="uc-ai"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" style="endArrow=none;html=1;strokeColor=#334155;" edge="1" parent="1" source="actor-notify" target="uc-reminder"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

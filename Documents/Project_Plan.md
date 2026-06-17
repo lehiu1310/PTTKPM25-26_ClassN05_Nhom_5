@@ -66,8 +66,8 @@ Muc tieu cu the:
 | 7. Tiet kiem | Tao muc tieu, nap tien nhieu lan, rut tien | Mo phong bo lon tiet kiem | Hoan thanh |
 | 8. Hoa don | Tao loi nhac, canh bao den han, xu ly thanh toan | Hoa don da xu ly khong con bao qua han | Hoan thanh |
 | 9. Tro ly chi tieu | AI Rule, canh bao bat thuong, goi y ngan sach | Canh bao thuc te theo du lieu tai khoan | Hoan thanh |
-| 10. Bao cao | Cap nhat report, plan, SRS, README | Repo co tai lieu nop bai | Dang cap nhat |
-| 11. Kiem thu | Analyze, build debug, chay tren emulator | App on dinh truoc khi nop | Dang thuc hien |
+| 10. Bao cao | Cap nhat report, plan, SRS, README | Repo co tai lieu nop bai | Hoan thanh |
+| 11. Kiem thu | Analyze, build debug, chay tren emulator | App on dinh truoc khi nop | Hoan thanh |
 
 ## 5. Phan Cong Va Quan Ly Tien Do
 

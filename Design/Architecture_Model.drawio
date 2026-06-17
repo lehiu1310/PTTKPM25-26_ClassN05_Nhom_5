@@ -1,0 +1,33 @@
+<mxfile host="app.diagrams.net" modified="2026-06-17T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="monex-architecture-model" name="Monex Architecture">
+    <mxGraphModel dx="1186" dy="733" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="ui" value="UI Layer&#xa;Screens / Widgets / Theme" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="110" width="250" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="state" value="Application State&#xa;MonexAppState + AccountLedger" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#2563EB;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="110" width="280" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="services" value="Service Layer&#xa;AI Rule / Insight / Notification / Report" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="110" width="280" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage" value="Local Storage&#xa;SharedPreferences JSON" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE7F3;strokeColor=#DB2777;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="320" width="280" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="android" value="Android Platform&#xa;Local Notification / Home Widget / File Share" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="320" width="280" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="report" value="Export Layer&#xa;PDF / Excel / Share" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEE2E2;strokeColor=#DC2626;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="320" width="250" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#334155;" edge="1" parent="1" source="ui" target="state"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#334155;" edge="1" parent="1" source="state" target="services"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#334155;" edge="1" parent="1" source="state" target="storage"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#334155;" edge="1" parent="1" source="services" target="android"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;strokeColor=#334155;" edge="1" parent="1" source="services" target="report"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
