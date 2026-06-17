@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:monex/data/app_state.dart';
+import 'package:monex/services/ai_rule_service.dart';
 
 enum InsightSeverity { info, good, warning, danger }
 
@@ -14,6 +15,8 @@ class AssistantInsight {
     required this.severity,
     required this.progress,
     required this.primaryAction,
+    this.actionType,
+    this.targetId,
   });
 
   final String title;
@@ -23,6 +26,8 @@ class AssistantInsight {
   final InsightSeverity severity;
   final double progress;
   final String primaryAction;
+  final String? actionType;
+  final String? targetId;
 }
 
 class SmartNotification {
@@ -34,6 +39,8 @@ class SmartNotification {
     required this.source,
     required this.severity,
     required this.sortDate,
+    this.actionType,
+    this.targetId,
   });
 
   final IconData icon;
@@ -43,6 +50,8 @@ class SmartNotification {
   final String source;
   final InsightSeverity severity;
   final DateTime sortDate;
+  final String? actionType;
+  final String? targetId;
 }
 
 class InsightService {
@@ -60,11 +69,13 @@ class InsightService {
         status: 'Gấp',
         severity: InsightSeverity.danger,
         progress: 1,
-        primaryAction: 'Xử lý ngay',
+        primaryAction: _primaryActionForNotification(item),
+        actionType: item.actionType,
+        targetId: item.targetId,
       );
     }
 
-    if (state.currentMonthTransactions.isEmpty && state.reminders.isEmpty) {
+    if (state.transactions.isEmpty && state.reminders.isEmpty) {
       return const AssistantInsight(
         title: 'Chưa đủ dữ liệu để phân tích',
         subtitle: 'Trợ lý đang chờ dữ liệu thật',
@@ -76,6 +87,9 @@ class InsightService {
         primaryAction: 'Thêm dữ liệu',
       );
     }
+
+    final recentInsight = _recentTransactionInsight(state);
+    if (recentInsight != null) return recentInsight;
 
     final highRisk = state.highestBudgetRisk;
     if (highRisk != null && highRisk.progress >= 0.75) {
@@ -113,9 +127,14 @@ class InsightService {
         status: 'Nhắc',
         severity: InsightSeverity.warning,
         progress: 0.65,
-        primaryAction: 'Xem hóa đơn',
+        primaryAction: 'Thanh toán',
+        actionType: 'pay_bill',
+        targetId: bill.id,
       );
     }
+
+    final goalInsight = _goalInsight(state);
+    if (goalInsight != null) return goalInsight;
 
     if (state.currentMonthIncomeTotal > 0 &&
         state.currentMonthExpenseTotal == 0) {
@@ -180,6 +199,8 @@ class InsightService {
 
   List<SmartNotification> buildNotifications(MonexAppState state) {
     final notifications = <SmartNotification>[];
+    notifications.addAll(_recentTransactionNotifications(state));
+    notifications.addAll(_aiRuleNotifications(state));
     notifications.addAll(_billNotifications(state));
     notifications.addAll(_budgetNotifications(state));
     notifications.addAll(_cashFlowNotifications(state));
@@ -195,6 +216,95 @@ class InsightService {
     });
 
     return notifications.take(8).toList(growable: false);
+  }
+
+  String _primaryActionForNotification(SmartNotification item) {
+    if (item.actionType == 'pay_bill') return 'Thanh toán';
+    if (item.source == 'Ngân sách') return 'Xem ngân sách';
+    if (item.source == 'AI Rule') return 'Xem phân tích';
+    if (item.source == 'Dòng tiền' || item.source == 'Giao dịch') {
+      return 'Xem giao dịch';
+    }
+    if (item.source == 'Tiết kiệm') return 'Xem tiết kiệm';
+    return 'Xem chi tiết';
+  }
+
+  List<SmartNotification> _aiRuleNotifications(MonexAppState state) {
+    final report = aiRuleService.buildReport(state);
+    final notifications = <SmartNotification>[];
+
+    final riskyPrediction = report.predictions
+        .where((item) => item.isRisky)
+        .toList(growable: false);
+    if (riskyPrediction.isNotEmpty) {
+      final item = riskyPrediction.first;
+      notifications.add(
+        SmartNotification(
+          icon: Icons.auto_graph_outlined,
+          title: 'Dự đoán vượt ngân sách tháng tới',
+          subtitle:
+              '${item.category} có thể tới ${money(item.predictedAmount)}, cao hơn giới hạn ${money(item.budgetLimit ?? 0)}.',
+          timeLabel: 'Tháng ${report.targetMonth.month}',
+          source: 'AI Rule',
+          severity: InsightSeverity.warning,
+          sortDate: DateTime.now(),
+        ),
+      );
+    }
+
+    final overBudget = report.budgetRecommendations
+        .where((item) => item.isOverSuggested)
+        .toList(growable: false);
+    if (overBudget.isNotEmpty) {
+      final item = overBudget.first;
+      notifications.add(
+        SmartNotification(
+          icon: Icons.savings_outlined,
+          title: 'AI đề xuất siết ngân sách',
+          subtitle:
+              '${item.category} đã dùng ${money(item.currentSpent)}, cao hơn mức đề xuất ${money(item.suggestedLimit)}.',
+          timeLabel: 'Tháng này',
+          source: 'AI Rule',
+          severity: InsightSeverity.warning,
+          sortDate: DateTime.now().subtract(const Duration(seconds: 30)),
+        ),
+      );
+    }
+
+    for (final anomaly in report.anomalies.take(2)) {
+      notifications.add(
+        SmartNotification(
+          icon: Icons.manage_search_outlined,
+          title: 'Giao dịch bất thường',
+          subtitle:
+              '${anomaly.entry.title} cao gấp ${anomaly.multiplier.toStringAsFixed(1)}x trung bình ${anomaly.entry.category} trong 30 ngày.',
+          timeLabel: _relativeDate(anomaly.entry.date),
+          source: 'AI Rule',
+          severity: anomaly.multiplier >= 3
+              ? InsightSeverity.danger
+              : InsightSeverity.warning,
+          sortDate: anomaly.entry.date,
+        ),
+      );
+    }
+
+    if (report.reductionSuggestions.isNotEmpty) {
+      final item = report.reductionSuggestions.first;
+      notifications.add(
+        SmartNotification(
+          icon: Icons.lightbulb_outline_rounded,
+          title: 'Gợi ý cắt giảm thông minh',
+          subtitle:
+              'Giảm ${item.category} khoảng ${item.reductionPercent.toStringAsFixed(0)}% để tiết kiệm thêm ${money(item.suggestedSaving)}.',
+          timeLabel: '3 tháng tăng',
+          source: 'AI Rule',
+          severity: InsightSeverity.info,
+          sortDate: DateTime.now().subtract(const Duration(minutes: 1)),
+        ),
+      );
+    }
+
+    return notifications;
   }
 
   List<SmartNotification> _billNotifications(MonexAppState state) {
@@ -217,8 +327,9 @@ class InsightService {
                 : days == 0
                 ? 'Hóa đơn đến hạn hôm nay'
                 : 'Hóa đơn sắp đến hạn',
-            subtitle:
-                '${item.title} cần ${money(item.amount)} - hạn ${shortDate(item.dueDate)}.',
+            subtitle: isOverdue
+                ? '${item.title} cần ${money(item.amount)} - hạn ${shortDate(item.dueDate)}. Thanh toán xong thì app sẽ ngừng nhắc.'
+                : '${item.title} cần ${money(item.amount)} - hạn ${shortDate(item.dueDate)}.',
             timeLabel: _dueLabel(item.dueDate),
             source: 'Hóa đơn',
             severity: isOverdue
@@ -227,6 +338,8 @@ class InsightService {
                 ? InsightSeverity.warning
                 : InsightSeverity.info,
             sortDate: item.dueDate,
+            actionType: 'pay_bill',
+            targetId: item.id,
           );
         })
         .toList(growable: false);
@@ -368,6 +481,247 @@ class InsightService {
           );
         })
         .toList(growable: false);
+  }
+
+  AssistantInsight? _recentTransactionInsight(MonexAppState state) {
+    final latest = _latestCreatedTransaction(state);
+    if (latest == null || !_isFresh(latest)) return null;
+
+    final monthIncome = state.incomeTotalForMonth(latest.date);
+    final monthExpense = state.expenseTotalForMonth(latest.date);
+    final monthBalance = state.balanceForMonth(latest.date);
+
+    if (latest.isIncome) {
+      final goal =
+          _completableGoal(state, monthBalance) ?? _nearestOpenGoal(state);
+      if (goal != null) {
+        final remaining = _goalRemaining(goal);
+        final canComplete = remaining > 0 && monthBalance >= remaining;
+        return AssistantInsight(
+          title: 'Vừa có thu nhập mới',
+          subtitle: '${latest.title} +${money(latest.amount)}',
+          message: canComplete
+              ? 'Số dư tháng này đủ để hoàn thành mục tiêu ${goal.title} còn ${money(remaining)}. Đây là thời điểm tốt để nạp thêm vào tiết kiệm.'
+              : 'Bạn vừa ghi ${money(latest.amount)} vào ${latest.category}. Nếu trích một phần nhỏ cho ${goal.title}, mục tiêu sẽ tiến nhanh hơn.',
+          status: canComplete ? 'Có thể đạt' : 'Tốt',
+          severity: InsightSeverity.good,
+          progress: canComplete ? 0.95 : math.max(goal.progress, 0.35),
+          primaryAction: 'Xem tiết kiệm',
+        );
+      }
+
+      return AssistantInsight(
+        title: 'Vừa ghi thu nhập mới',
+        subtitle: '${latest.title} +${money(latest.amount)}',
+        message:
+            'Số dư tháng này hiện là ${money(monthBalance)}. Khi bạn tiếp tục thêm chi phí, trợ lý sẽ so sánh thu/chi và cảnh báo đúng theo dữ liệu mới.',
+        status: 'Tốt',
+        severity: InsightSeverity.good,
+        progress: 0.35,
+        primaryAction: 'Xem giao dịch',
+      );
+    }
+
+    final budget = _budgetForCategory(state, latest);
+    if (budget != null && budget.progress >= 0.75) {
+      final remaining = (budget.limit - budget.spent)
+          .clamp(0, budget.limit)
+          .toDouble();
+      final isOver = budget.progress >= 1;
+      return AssistantInsight(
+        title: isOver
+            ? 'Khoản chi vừa nhập làm vượt ngân sách'
+            : 'Khoản chi vừa nhập sát ngân sách',
+        subtitle:
+            '${latest.category}: ${money(budget.spent)} / ${money(budget.limit)}',
+        message: isOver
+            ? 'Bạn vừa chi ${money(latest.amount)} cho ${latest.title}. Nhóm ${latest.category} đã vượt giới hạn, nên kiểm tra lại các khoản cùng danh mục.'
+            : 'Sau khoản ${latest.title}, nhóm ${latest.category} chỉ còn ${money(remaining)} trước khi chạm ngân sách.',
+        status: isOver ? 'Gấp' : 'Cần xem',
+        severity: isOver ? InsightSeverity.danger : InsightSeverity.warning,
+        progress: budget.progress.clamp(0.0, 1.0).toDouble(),
+        primaryAction: 'Xem ngân sách',
+      );
+    }
+
+    if (monthIncome > 0 && monthExpense >= monthIncome * 0.7) {
+      final ratio = (monthExpense / monthIncome).clamp(0.0, 1.0).toDouble();
+      return AssistantInsight(
+        title: 'Khoản chi mới làm tỷ lệ chi tăng',
+        subtitle: 'Đã dùng ${(ratio * 100).round()}% thu nhập tháng này',
+        message:
+            'Bạn vừa chi ${money(latest.amount)} cho ${latest.title}. Tổng chi tháng này là ${money(monthExpense)}, số dư còn ${money(monthBalance)}.',
+        status: ratio >= 0.9 ? 'Căng' : 'Theo dõi',
+        severity: ratio >= 0.9
+            ? InsightSeverity.danger
+            : InsightSeverity.warning,
+        progress: ratio,
+        primaryAction: 'Xem phân tích',
+      );
+    }
+
+    if (monthBalance < 0) {
+      return AssistantInsight(
+        title: 'Số dư tháng này đang âm',
+        subtitle: 'Âm ${money(monthBalance.abs())} sau khoản chi mới',
+        message:
+            'Khoản ${latest.title} vừa nhập làm dòng tiền âm. Hãy xem lại danh sách giao dịch hoặc bổ sung nguồn thu tương ứng.',
+        status: 'Gấp',
+        severity: InsightSeverity.danger,
+        progress: 1,
+        primaryAction: 'Xem giao dịch',
+      );
+    }
+
+    return null;
+  }
+
+  AssistantInsight? _goalInsight(MonexAppState state) {
+    final monthBalance = state.currentMonthBalance;
+    final completable = _completableGoal(state, monthBalance);
+    if (completable != null) {
+      final remaining = _goalRemaining(completable);
+      return AssistantInsight(
+        title: 'Có thể hoàn thiện mục tiêu',
+        subtitle: '${completable.title} còn ${money(remaining)}',
+        message:
+            'Số dư tháng này đủ để nạp nốt mục tiêu ${completable.title}. Nếu bạn muốn mua/đạt mục tiêu sớm, đây là khoản nên ưu tiên.',
+        status: 'Có thể đạt',
+        severity: InsightSeverity.good,
+        progress: completable.progress.clamp(0.0, 1.0).toDouble(),
+        primaryAction: 'Xem tiết kiệm',
+      );
+    }
+
+    final goal = _nearestOpenGoal(state);
+    if (goal == null) return null;
+    final days = _dateOnly(goal.deadline).difference(_today()).inDays;
+    final remaining = _goalRemaining(goal);
+
+    if (days < 0 && remaining > 0) {
+      return AssistantInsight(
+        title: 'Mục tiêu tiết kiệm đã quá hạn',
+        subtitle: '${goal.title} còn ${money(remaining)}',
+        message:
+            'Mục tiêu này đã qua hạn nhưng chưa hoàn thành. Bạn có thể gia hạn hoặc nạp thêm từng phần để không mất nhịp tiết kiệm.',
+        status: 'Quá hạn',
+        severity: InsightSeverity.warning,
+        progress: goal.progress.clamp(0.0, 1.0).toDouble(),
+        primaryAction: 'Xem tiết kiệm',
+      );
+    }
+
+    if (goal.progress >= 0.8 && remaining > 0) {
+      return AssistantInsight(
+        title: 'Mục tiêu tiết kiệm sắp hoàn thành',
+        subtitle: '${goal.title} đã đạt ${(goal.progress * 100).round()}%',
+        message:
+            'Bạn chỉ còn ${money(remaining)} để hoàn thành ${goal.title}. Nạp thêm từng khoản nhỏ sau mỗi lần có thu nhập sẽ dễ đạt hơn.',
+        status: 'Sắp đạt',
+        severity: InsightSeverity.good,
+        progress: goal.progress.clamp(0.0, 1.0).toDouble(),
+        primaryAction: 'Xem tiết kiệm',
+      );
+    }
+
+    if (days >= 0 && days <= 30 && goal.progress < 0.75) {
+      final perDay = remaining / math.max(days + 1, 1);
+      return AssistantInsight(
+        title: 'Mục tiêu cần tăng tốc',
+        subtitle: '${goal.title} còn $days ngày',
+        message:
+            'Để kịp hạn, bạn cần tiết kiệm khoảng ${money(perDay)} mỗi ngày cho mục tiêu này.',
+        status: 'Nhắc',
+        severity: InsightSeverity.info,
+        progress: goal.progress.clamp(0.0, 1.0).toDouble(),
+        primaryAction: 'Xem tiết kiệm',
+      );
+    }
+
+    return null;
+  }
+
+  List<SmartNotification> _recentTransactionNotifications(MonexAppState state) {
+    final items = state.transactions.where(_isFresh).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return items
+        .take(3)
+        .map((entry) {
+          final budget = entry.isIncome
+              ? null
+              : _budgetForCategory(state, entry);
+          final isOverBudget = budget != null && budget.progress >= 1;
+          final isNearBudget = budget != null && budget.progress >= 0.8;
+          return SmartNotification(
+            icon: entry.isIncome ? Icons.arrow_downward_rounded : entry.icon,
+            title: entry.isIncome ? 'Vừa ghi thu nhập' : 'Vừa ghi chi tiêu',
+            subtitle: entry.isIncome
+                ? '${entry.title} +${money(entry.amount)} vào ${entry.category}.'
+                : '${entry.title} -${money(entry.amount)} cho ${entry.category}${isOverBudget
+                      ? ', đã vượt ngân sách.'
+                      : isNearBudget
+                      ? ', sắp chạm ngân sách.'
+                      : '.'}',
+            timeLabel: _relativeDate(entry.createdAt),
+            source: 'Giao dịch',
+            severity: entry.isIncome
+                ? InsightSeverity.good
+                : isOverBudget
+                ? InsightSeverity.danger
+                : isNearBudget
+                ? InsightSeverity.warning
+                : InsightSeverity.info,
+            sortDate: entry.createdAt,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  TransactionEntry? _latestCreatedTransaction(MonexAppState state) {
+    if (state.transactions.isEmpty) return null;
+    final items = state.transactions.toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items.first;
+  }
+
+  bool _isFresh(TransactionEntry entry) {
+    final diff = DateTime.now().difference(entry.createdAt);
+    return !diff.isNegative && diff <= const Duration(hours: 24);
+  }
+
+  BudgetInfo? _budgetForCategory(MonexAppState state, TransactionEntry entry) {
+    for (final budget in state.budgetsForMonth(entry.date)) {
+      if (budget.category.toLowerCase() == entry.category.toLowerCase()) {
+        return budget;
+      }
+    }
+    return null;
+  }
+
+  SavingsGoal? _completableGoal(MonexAppState state, double availableBalance) {
+    final goals =
+        state.goals
+            .where((goal) => goal.progress < 1 && _goalRemaining(goal) > 0)
+            .where((goal) => availableBalance >= _goalRemaining(goal))
+            .toList()
+          ..sort((a, b) => _goalRemaining(a).compareTo(_goalRemaining(b)));
+    return goals.isEmpty ? null : goals.first;
+  }
+
+  SavingsGoal? _nearestOpenGoal(MonexAppState state) {
+    final goals =
+        state.goals
+            .where((goal) => goal.progress < 1 && _goalRemaining(goal) > 0)
+            .toList()
+          ..sort((a, b) => a.deadline.compareTo(b.deadline));
+    return goals.isEmpty ? null : goals.first;
+  }
+
+  double _goalRemaining(SavingsGoal goal) {
+    return (goal.targetAmount - goal.currentAmount)
+        .clamp(0, goal.targetAmount)
+        .toDouble();
   }
 
   _CategoryTotal? _topExpenseCategory(MonexAppState state) {

@@ -164,6 +164,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           _buildLoginOptions(context),
                           const SizedBox(height: 8),
                           _buildPrimaryButton(),
+                          const SizedBox(height: 10),
+                          _buildCreateAccountButton(context),
                           const SizedBox(height: 14),
                           _buildQuickLoginActions(),
                           const SizedBox(height: 22),
@@ -190,8 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             asset: 'lib/assets/images/apple_logo.png',
                             label: 'Tiếp tục với Apple',
                           ),
-                          const SizedBox(height: 24),
-                          _buildRegisterLink(context),
+                          const SizedBox(height: 14),
                         ],
                       ),
                     ),
@@ -363,6 +364,27 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _buildCreateAccountButton(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RegisterScreen()),
+        );
+      },
+      icon: const Icon(Icons.person_add_alt_1_rounded, size: 20),
+      label: const Text('Tạo tài khoản mới'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: MonexColors.primary,
+        backgroundColor: MonexColors.surface,
+        side: const BorderSide(color: MonexColors.primary),
+        minimumSize: const Size(double.infinity, 52),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        textStyle: const TextStyle(fontWeight: FontWeight.w800),
+      ),
+    );
+  }
+
   Widget _buildQuickLoginActions() {
     return Row(
       children: [
@@ -424,33 +446,6 @@ class _LoginScreenState extends State<LoginScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: const TextStyle(fontWeight: FontWeight.w700),
       ),
-    );
-  }
-
-  Widget _buildRegisterLink(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text(
-          'Chưa có tài khoản? ',
-          style: TextStyle(color: MonexColors.muted),
-        ),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const RegisterScreen()),
-            );
-          },
-          child: const Text(
-            'Đăng ký',
-            style: TextStyle(
-              color: MonexColors.primary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

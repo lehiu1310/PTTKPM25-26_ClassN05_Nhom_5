@@ -29,7 +29,8 @@ class TransactionEntry {
     required this.date,
     required this.paymentMethod,
     required this.icon,
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   final String id;
   final TransactionType type;
@@ -37,6 +38,7 @@ class TransactionEntry {
   final String category;
   final double amount;
   final DateTime date;
+  final DateTime createdAt;
   final String paymentMethod;
   final IconData icon;
 
@@ -76,6 +78,8 @@ class ReminderEntry {
     required this.reminderDate,
     required this.dueDate,
     required this.frequency,
+    this.isPaid = false,
+    this.paidAt,
   });
 
   final String id;
@@ -84,6 +88,36 @@ class ReminderEntry {
   final DateTime reminderDate;
   final DateTime dueDate;
   final String frequency;
+  bool isPaid;
+  DateTime? paidAt;
+}
+
+class RecurringTransactionRule {
+  RecurringTransactionRule({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.category,
+    required this.amount,
+    required this.frequency,
+    required this.dayOfMonth,
+    required this.nextRunDate,
+    required this.createdAt,
+    this.isActive = true,
+  });
+
+  final String id;
+  final TransactionType type;
+  final String title;
+  final String category;
+  final double amount;
+  final String frequency;
+  final int dayOfMonth;
+  DateTime nextRunDate;
+  final DateTime createdAt;
+  bool isActive;
+
+  bool get isIncome => type == TransactionType.income;
 }
 
 class BudgetInfo {
@@ -114,25 +148,61 @@ class _AccountLedger {
     List<TransactionEntry>? transactions,
     List<SavingsGoal>? goals,
     List<ReminderEntry>? reminders,
+    List<RecurringTransactionRule>? recurringRules,
     List<String>? incomeCategories,
     List<String>? expenseCategories,
     Map<String, double>? budgetLimits,
   }) : transactions = List<TransactionEntry>.of(transactions ?? []),
        goals = List<SavingsGoal>.of(goals ?? []),
        reminders = List<ReminderEntry>.of(reminders ?? []),
+       recurringRules = List<RecurringTransactionRule>.of(recurringRules ?? []),
        incomeCategories = List<String>.of(
          incomeCategories ?? ['Lương', 'Thưởng', 'Freelance'],
        ),
        expenseCategories = List<String>.of(
-         expenseCategories ?? ['Ăn uống', 'Giao thông', 'Mua sắm', 'Hóa đơn'],
+         expenseCategories ??
+             [
+               'Tiền thuê nhà',
+               'Ăn uống',
+               'Tiền điện',
+               'Tiền nước',
+               'Xăng xe',
+               'Internet',
+               'Điện thoại',
+               'Giao thông',
+               'Mua sắm',
+               'Hóa đơn',
+               'Y tế',
+               'Giáo dục',
+               'Giải trí',
+               'Gia đình',
+               'Dự phòng',
+             ],
        ),
        budgetLimits =
            budgetLimits ??
-           {'Ăn uống': 500, 'Mua sắm': 500, 'Giao thông': 100, 'Hóa đơn': 250};
+           {
+             'Tiền thuê nhà': 800,
+             'Ăn uống': 500,
+             'Tiền điện': 120,
+             'Tiền nước': 60,
+             'Xăng xe': 180,
+             'Internet': 80,
+             'Điện thoại': 60,
+             'Giao thông': 120,
+             'Mua sắm': 500,
+             'Hóa đơn': 250,
+             'Y tế': 160,
+             'Giáo dục': 180,
+             'Giải trí': 150,
+             'Gia đình': 180,
+             'Dự phòng': 220,
+           };
 
   final List<TransactionEntry> transactions;
   final List<SavingsGoal> goals;
   final List<ReminderEntry> reminders;
+  final List<RecurringTransactionRule> recurringRules;
   final List<String> incomeCategories;
   final List<String> expenseCategories;
   final Map<String, double> budgetLimits;
@@ -159,8 +229,12 @@ class MonexAppState extends ChangeNotifier {
   List<TransactionEntry> get transactions =>
       List.unmodifiable(_activeLedger.transactions);
   List<SavingsGoal> get goals => List.unmodifiable(_activeLedger.goals);
-  List<ReminderEntry> get reminders =>
-      List.unmodifiable(_activeLedger.reminders);
+  List<ReminderEntry> get reminders => List.unmodifiable(
+    _activeLedger.reminders.where((reminder) => !reminder.isPaid),
+  );
+  List<RecurringTransactionRule> get recurringRules => List.unmodifiable(
+    _activeLedger.recurringRules.where((rule) => rule.isActive),
+  );
   List<String> get incomeCategories =>
       List.unmodifiable(_activeLedger.incomeCategories);
   List<String> get expenseCategories =>
@@ -181,6 +255,42 @@ class MonexAppState extends ChangeNotifier {
     items.sort((a, b) => b.date.compareTo(a.date));
     return items.take(8).toList(growable: false);
   }
+
+  static const List<String> _coreExpenseCategories = [
+    'Tiền thuê nhà',
+    'Ăn uống',
+    'Tiền điện',
+    'Tiền nước',
+    'Xăng xe',
+    'Internet',
+    'Điện thoại',
+    'Giao thông',
+    'Mua sắm',
+    'Hóa đơn',
+    'Y tế',
+    'Giáo dục',
+    'Giải trí',
+    'Gia đình',
+    'Dự phòng',
+  ];
+
+  static const Map<String, double> _coreBudgetLimits = {
+    'Tiền thuê nhà': 800,
+    'Ăn uống': 500,
+    'Tiền điện': 120,
+    'Tiền nước': 60,
+    'Xăng xe': 180,
+    'Internet': 80,
+    'Điện thoại': 60,
+    'Giao thông': 120,
+    'Mua sắm': 500,
+    'Hóa đơn': 250,
+    'Y tế': 160,
+    'Giáo dục': 180,
+    'Giải trí': 150,
+    'Gia đình': 180,
+    'Dự phòng': 220,
+  };
 
   List<TransactionEntry> transactionsInRange(DateTime start, DateTime end) {
     final from = DateTime(start.year, start.month, start.day);
@@ -253,6 +363,7 @@ class MonexAppState extends ChangeNotifier {
 
       _restoreFromJson(decoded);
       _hasLoaded = true;
+      applyDueRecurringTransactions();
     } catch (_) {
       _resetToDemoAccount();
       _hasLoaded = true;
@@ -309,7 +420,7 @@ class MonexAppState extends ChangeNotifier {
     _currentAccount = matched;
     _displayName = matched.username;
     _ledgers.putIfAbsent(_accountKey(matched), _AccountLedger.new);
-    _persistAndNotify();
+    if (applyDueRecurringTransactions() == 0) _persistAndNotify();
     return true;
   }
 
@@ -317,61 +428,155 @@ class MonexAppState extends ChangeNotifier {
     _currentAccount = null;
     _displayName = 'Khách';
     _ledgers.putIfAbsent(_guestKey, _AccountLedger.new);
-    _persistAndNotify();
+    if (applyDueRecurringTransactions() == 0) _persistAndNotify();
   }
 
   void logout() {
     _currentAccount = null;
     _displayName = 'Khách';
     _ledgers.putIfAbsent(_guestKey, _AccountLedger.new);
-    _persistAndNotify();
+    if (applyDueRecurringTransactions() == 0) _persistAndNotify();
   }
 
-  void addIncome({
+  TransactionEntry addIncome({
     required String title,
     required double amount,
     required String category,
     required DateTime date,
   }) {
     final ledger = _activeLedger;
-    ledger.transactions.add(
-      TransactionEntry(
-        id: _newId(),
-        type: TransactionType.income,
-        title: title.trim(),
-        category: category,
-        amount: amount,
-        date: date,
-        paymentMethod: 'Tiền mặt',
-        icon: _incomeIcon(category),
-      ),
+    final entry = TransactionEntry(
+      id: _newId(),
+      type: TransactionType.income,
+      title: title.trim(),
+      category: category,
+      amount: amount,
+      date: date,
+      paymentMethod: 'Tiền mặt',
+      icon: _incomeIcon(category),
     );
+    ledger.transactions.add(entry);
     _ensureCategory(ledger.incomeCategories, category);
     _persistAndNotify();
+    return entry;
   }
 
-  void addExpense({
+  TransactionEntry addExpense({
     required String title,
     required double amount,
     required String category,
     required DateTime date,
   }) {
     final ledger = _activeLedger;
-    ledger.transactions.add(
-      TransactionEntry(
-        id: _newId(),
-        type: TransactionType.expense,
-        title: title.trim(),
-        category: category,
-        amount: amount,
-        date: date,
-        paymentMethod: 'Tiền mặt',
-        icon: _expenseIcon(category),
-      ),
+    final entry = TransactionEntry(
+      id: _newId(),
+      type: TransactionType.expense,
+      title: title.trim(),
+      category: category,
+      amount: amount,
+      date: date,
+      paymentMethod: 'Tiền mặt',
+      icon: _expenseIcon(category),
     );
+    ledger.transactions.add(entry);
     _ensureCategory(ledger.expenseCategories, category);
     ledger.budgetLimits.putIfAbsent(category, () => amount * 2);
     _persistAndNotify();
+    return entry;
+  }
+
+  RecurringTransactionRule addRecurringTransaction({
+    required TransactionType type,
+    required String title,
+    required double amount,
+    required String category,
+    required DateTime startDate,
+    String frequency = 'Hàng tháng',
+  }) {
+    final normalizedStart = DateTime(
+      startDate.year,
+      startDate.month,
+      startDate.day,
+    );
+    final rule = RecurringTransactionRule(
+      id: _newId(),
+      type: type,
+      title: title.trim(),
+      category: category,
+      amount: amount,
+      frequency: frequency,
+      dayOfMonth: normalizedStart.day,
+      nextRunDate: _nextRecurringDate(
+        normalizedStart,
+        frequency,
+        normalizedStart.day,
+      ),
+      createdAt: DateTime.now(),
+    );
+    final ledger = _activeLedger;
+    ledger.recurringRules.add(rule);
+    if (type == TransactionType.income) {
+      _ensureCategory(ledger.incomeCategories, category);
+    } else {
+      _ensureCategory(ledger.expenseCategories, category);
+      ledger.budgetLimits.putIfAbsent(category, () => amount * 2);
+    }
+    _persistAndNotify();
+    return rule;
+  }
+
+  int applyDueRecurringTransactions() {
+    final ledger = _activeLedger;
+    final today = DateTime.now();
+    final dateOnly = DateTime(today.year, today.month, today.day);
+    var created = 0;
+
+    for (final rule in ledger.recurringRules.where((rule) => rule.isActive)) {
+      var guard = 0;
+      while (!rule.nextRunDate.isAfter(dateOnly) && guard < 24) {
+        final entry = TransactionEntry(
+          id: _newId(),
+          type: rule.type,
+          title: 'Tự động: ${rule.title}',
+          category: rule.category,
+          amount: rule.amount,
+          date: rule.nextRunDate,
+          createdAt: DateTime.now(),
+          paymentMethod: 'Tự động',
+          icon: rule.isIncome
+              ? _incomeIcon(rule.category)
+              : _expenseIcon(rule.category),
+        );
+        ledger.transactions.add(entry);
+        if (rule.isIncome) {
+          _ensureCategory(ledger.incomeCategories, rule.category);
+        } else {
+          _ensureCategory(ledger.expenseCategories, rule.category);
+          ledger.budgetLimits.putIfAbsent(rule.category, () => rule.amount * 2);
+        }
+        rule.nextRunDate = _nextRecurringDate(
+          rule.nextRunDate,
+          rule.frequency,
+          rule.dayOfMonth,
+        );
+        created++;
+        guard++;
+      }
+    }
+
+    if (created > 0) _persistAndNotify();
+    return created;
+  }
+
+  bool deactivateRecurringTransaction(String ruleId) {
+    for (final rule in _activeLedger.recurringRules) {
+      if (rule.id != ruleId) continue;
+      if (!rule.isActive) return false;
+      rule.isActive = false;
+      _persistAndNotify();
+      return true;
+    }
+    return false;
   }
 
   void addGoal({
@@ -435,6 +640,19 @@ class MonexAppState extends ChangeNotifier {
     _activeLedger.reminders.add(reminder);
     _persistAndNotify();
     return reminder;
+  }
+
+  bool markReminderPaid(String reminderId) {
+    for (final reminder in _activeLedger.reminders) {
+      if (reminder.id != reminderId) continue;
+      if (reminder.isPaid) return false;
+
+      reminder.isPaid = true;
+      reminder.paidAt = DateTime.now();
+      _persistAndNotify();
+      return true;
+    }
+    return false;
   }
 
   void addCategory(TransactionType type, String category) {
@@ -604,6 +822,9 @@ class MonexAppState extends ChangeNotifier {
       'reminders': ledger.reminders
           .map(_reminderToJson)
           .toList(growable: false),
+      'recurringRules': ledger.recurringRules
+          .map(_recurringRuleToJson)
+          .toList(growable: false),
       'incomeCategories': ledger.incomeCategories,
       'expenseCategories': ledger.expenseCategories,
       'budgetLimits': ledger.budgetLimits,
@@ -613,14 +834,17 @@ class MonexAppState extends ChangeNotifier {
   _AccountLedger _ledgerFromJson(Object? value) {
     if (value is! Map) return _AccountLedger();
 
-    return _AccountLedger(
+    final ledger = _AccountLedger(
       transactions: _transactionsFromJson(value['transactions']),
       goals: _goalsFromJson(value['goals']),
       reminders: _remindersFromJson(value['reminders']),
+      recurringRules: _recurringRulesFromJson(value['recurringRules']),
       incomeCategories: _stringListFromJson(value['incomeCategories']),
       expenseCategories: _stringListFromJson(value['expenseCategories']),
       budgetLimits: _budgetLimitsFromJson(value['budgetLimits']),
     );
+    _ensureCoreExpenseCategories(ledger);
+    return ledger;
   }
 
   Map<String, dynamic> _transactionToJson(TransactionEntry entry) {
@@ -631,6 +855,7 @@ class MonexAppState extends ChangeNotifier {
       'category': entry.category,
       'amount': entry.amount,
       'date': entry.date.toIso8601String(),
+      'createdAt': entry.createdAt.toIso8601String(),
       'paymentMethod': entry.paymentMethod,
     };
   }
@@ -649,13 +874,16 @@ class MonexAppState extends ChangeNotifier {
       type == TransactionType.income ? 'Thu nhập' : 'Chi phí',
     );
 
+    final date = _dateFromJson(value['date'], DateTime.now());
+
     return TransactionEntry(
       id: _stringFromJson(value['id'], _newId()),
       type: type,
       title: _stringFromJson(value['title'], category),
       category: category,
       amount: _doubleFromJson(value['amount']),
-      date: _dateFromJson(value['date'], DateTime.now()),
+      date: date,
+      createdAt: _dateFromJson(value['createdAt'], date),
       paymentMethod: _stringFromJson(value['paymentMethod'], 'Tiền mặt'),
       icon: type == TransactionType.income
           ? _incomeIcon(category)
@@ -718,6 +946,8 @@ class MonexAppState extends ChangeNotifier {
       'reminderDate': reminder.reminderDate.toIso8601String(),
       'dueDate': reminder.dueDate.toIso8601String(),
       'frequency': reminder.frequency,
+      'isPaid': reminder.isPaid,
+      'paidAt': reminder.paidAt?.toIso8601String(),
     };
   }
 
@@ -725,6 +955,7 @@ class MonexAppState extends ChangeNotifier {
     if (value is! Map) return null;
     final title = _stringFromJson(value['title'], '').trim();
     if (title.isEmpty) return null;
+    final paidAtRaw = value['paidAt'];
 
     return ReminderEntry(
       id: _stringFromJson(value['id'], _newId()),
@@ -733,6 +964,8 @@ class MonexAppState extends ChangeNotifier {
       reminderDate: _dateFromJson(value['reminderDate'], DateTime.now()),
       dueDate: _dateFromJson(value['dueDate'], DateTime.now()),
       frequency: _stringFromJson(value['frequency'], 'Không lặp lại'),
+      isPaid: value['isPaid'] == true,
+      paidAt: paidAtRaw is String ? DateTime.tryParse(paidAtRaw) : null,
     );
   }
 
@@ -742,6 +975,64 @@ class MonexAppState extends ChangeNotifier {
     for (final item in value) {
       final reminder = _reminderFromJson(item);
       if (reminder != null) items.add(reminder);
+    }
+    return items;
+  }
+
+  Map<String, dynamic> _recurringRuleToJson(RecurringTransactionRule rule) {
+    return {
+      'id': rule.id,
+      'type': rule.type.name,
+      'title': rule.title,
+      'category': rule.category,
+      'amount': rule.amount,
+      'frequency': rule.frequency,
+      'dayOfMonth': rule.dayOfMonth,
+      'nextRunDate': rule.nextRunDate.toIso8601String(),
+      'createdAt': rule.createdAt.toIso8601String(),
+      'isActive': rule.isActive,
+    };
+  }
+
+  RecurringTransactionRule? _recurringRuleFromJson(Object? value) {
+    if (value is! Map) return null;
+    final title = _stringFromJson(value['title'], '').trim();
+    final category = _stringFromJson(value['category'], '').trim();
+    if (title.isEmpty || category.isEmpty) return null;
+
+    final typeName = _stringFromJson(
+      value['type'],
+      TransactionType.expense.name,
+    );
+    final type = typeName == TransactionType.income.name
+        ? TransactionType.income
+        : TransactionType.expense;
+    final fallbackDate = DateTime.now();
+    final day = _intFromJson(
+      value['dayOfMonth'],
+      fallbackDate.day,
+    ).clamp(1, 31).toInt();
+
+    return RecurringTransactionRule(
+      id: _stringFromJson(value['id'], _newId()),
+      type: type,
+      title: title,
+      category: category,
+      amount: _doubleFromJson(value['amount']),
+      frequency: _stringFromJson(value['frequency'], 'Hàng tháng'),
+      dayOfMonth: day,
+      nextRunDate: _dateFromJson(value['nextRunDate'], fallbackDate),
+      createdAt: _dateFromJson(value['createdAt'], fallbackDate),
+      isActive: value['isActive'] != false,
+    );
+  }
+
+  List<RecurringTransactionRule>? _recurringRulesFromJson(Object? value) {
+    if (value is! List) return null;
+    final items = <RecurringTransactionRule>[];
+    for (final item in value) {
+      final rule = _recurringRuleFromJson(item);
+      if (rule != null) items.add(rule);
     }
     return items;
   }
@@ -775,6 +1066,13 @@ class MonexAppState extends ChangeNotifier {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0;
     return 0;
+  }
+
+  int _intFromJson(Object? value, int fallback) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? fallback;
+    return fallback;
   }
 
   DateTime _dateFromJson(Object? value, DateTime fallback) {
@@ -917,11 +1215,42 @@ class MonexAppState extends ChangeNotifier {
 
   String _newId() => DateTime.now().microsecondsSinceEpoch.toString();
 
+  DateTime _nextRecurringDate(DateTime from, String frequency, int dayOfMonth) {
+    final lower = frequency.toLowerCase();
+    if (lower.contains('ngày')) {
+      return from.add(const Duration(days: 1));
+    }
+    if (lower.contains('tuần')) {
+      return from.add(const Duration(days: 7));
+    }
+    if (lower.contains('năm')) {
+      return _clampedDate(from.year + 1, from.month, dayOfMonth);
+    }
+    return _clampedDate(from.year, from.month + 1, dayOfMonth);
+  }
+
+  DateTime _clampedDate(int year, int month, int day) {
+    final first = DateTime(year, month);
+    final lastDay = DateTime(first.year, first.month + 1, 0).day;
+    final safeDay = day > lastDay ? lastDay : day;
+    return DateTime(first.year, first.month, safeDay);
+  }
+
   void _ensureCategory(List<String> categories, String category) {
     if (!categories.any(
       (item) => item.toLowerCase() == category.toLowerCase(),
     )) {
       categories.add(category);
+    }
+  }
+
+  void _ensureCoreExpenseCategories(_AccountLedger ledger) {
+    for (final category in _coreExpenseCategories) {
+      _ensureCategory(ledger.expenseCategories, category);
+      ledger.budgetLimits.putIfAbsent(
+        category,
+        () => _coreBudgetLimits[category] ?? 150,
+      );
     }
   }
 
@@ -934,10 +1263,31 @@ class MonexAppState extends ChangeNotifier {
 
   IconData _expenseIcon(String category) {
     final lower = category.toLowerCase();
+    if (lower.contains('thuê') || lower.contains('nhà')) {
+      return Icons.home_work_outlined;
+    }
     if (lower.contains('ăn')) return Icons.fastfood_outlined;
+    if (lower.contains('điện thoại')) return Icons.phone_iphone_outlined;
+    if (lower.contains('điện')) return Icons.bolt_outlined;
+    if (lower.contains('nước')) return Icons.water_drop_outlined;
+    if (lower.contains('xăng') || lower.contains('xe')) {
+      return Icons.local_gas_station_outlined;
+    }
+    if (lower.contains('internet') || lower.contains('wifi')) {
+      return Icons.wifi_outlined;
+    }
     if (lower.contains('giao')) return Icons.directions_bus_outlined;
     if (lower.contains('mua')) return Icons.shopping_bag_outlined;
     if (lower.contains('hóa')) return Icons.receipt_long_outlined;
+    if (lower.contains('y tế') || lower.contains('thuốc')) {
+      return Icons.local_hospital_outlined;
+    }
+    if (lower.contains('giáo') || lower.contains('học')) {
+      return Icons.school_outlined;
+    }
+    if (lower.contains('giải trí')) return Icons.movie_outlined;
+    if (lower.contains('gia đình')) return Icons.family_restroom_outlined;
+    if (lower.contains('dự phòng')) return Icons.shield_outlined;
     return Icons.payments_outlined;
   }
 
@@ -954,9 +1304,23 @@ class MonexAppState extends ChangeNotifier {
 
   Color _budgetColor(String category) {
     final lower = category.toLowerCase();
+    if (lower.contains('thuê') || lower.contains('nhà')) {
+      return const Color(0xFF6D5BD0);
+    }
     if (lower.contains('ăn')) return const Color(0xFFE45D4F);
+    if (lower.contains('điện')) return const Color(0xFFE5A935);
+    if (lower.contains('nước')) return const Color(0xFF2F9CDB);
+    if (lower.contains('xăng') || lower.contains('giao')) {
+      return const Color(0xFF4A65D9);
+    }
+    if (lower.contains('internet') || lower.contains('điện thoại')) {
+      return const Color(0xFF147C8C);
+    }
     if (lower.contains('mua')) return const Color(0xFFE5A935);
-    if (lower.contains('giao')) return const Color(0xFF4A65D9);
+    if (lower.contains('y tế')) return const Color(0xFFDB4D79);
+    if (lower.contains('giáo')) return const Color(0xFF7B61FF);
+    if (lower.contains('giải')) return const Color(0xFFEF7B45);
+    if (lower.contains('dự phòng')) return const Color(0xFF2E8F6D);
     return const Color(0xFF146C63);
   }
 }

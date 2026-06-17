@@ -1,8 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:monex/data/app_state.dart';
+import 'package:monex/services/ai_rule_service.dart';
 import 'package:monex/theme/app_theme.dart';
 import 'package:monex/theme/monex_background.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 enum _AnalyticsPeriod { month, year }
 
@@ -17,6 +19,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   _AnalyticsPeriod _period = _AnalyticsPeriod.month;
   DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime _selectedYear = DateTime(DateTime.now().year);
+  DateTime _selectedCalendarDay = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +33,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         ? _dailyBuckets(_selectedMonth)
         : _monthlyBuckets(_selectedYear.year);
     final trend = _buildTrendMonths();
+    final aiReport = aiRuleService.buildReport(
+      appState,
+      focusMonth: _period == _AnalyticsPeriod.month
+          ? _selectedMonth
+          : DateTime(_selectedYear.year, DateTime.now().month),
+    );
 
     return Scaffold(
       backgroundColor: MonexColors.background,
@@ -48,6 +57,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             const SizedBox(height: 16),
             _buildSummary(report, previous),
             const SizedBox(height: 18),
+            _buildAiRulePanel(aiReport),
+            const SizedBox(height: 18),
+            _buildCalendarView(),
+            const SizedBox(height: 18),
             _buildCard(
               title: _period == _AnalyticsPeriod.month
                   ? 'Thu / chi theo ngày'
@@ -60,6 +73,13 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
               title: 'Xu hướng 12 tháng',
               subtitle: 'Theo chi tiêu từng tháng',
               child: SizedBox(height: 220, child: _buildTrendChart(trend)),
+              legends: const [
+                _LegendDot(color: MonexColors.expense, label: 'Chi tiêu'),
+                SizedBox(width: 14),
+                _LegendDot(color: MonexColors.info, label: 'Trend line'),
+                SizedBox(width: 14),
+                _LegendDot(color: MonexColors.accent, label: 'Trung bình'),
+              ],
             ),
             const SizedBox(height: 18),
             _buildCategoryBreakdown(report),
@@ -367,10 +387,503 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
   }
 
+  Widget _buildAiRulePanel(AiRuleReport report) {
+    final trend = report.trend;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: MonexTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'AI Rule phân tích',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                ),
+              ),
+              _smallPill('3-6 tháng'),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Dự đoán tháng ${report.targetMonth.month}, bất thường 30 ngày và gợi ý cắt giảm từ dữ liệu tài khoản này.',
+            style: const TextStyle(
+              color: MonexColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _aiMetric(
+                  'MoM',
+                  _percentText(trend.momPercent),
+                  _deltaColor(trend.momPercent),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _aiMetric(
+                  'YoY',
+                  _percentText(trend.yoyPercent),
+                  _deltaColor(trend.yoyPercent),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _aiMetric(
+                  'Trend',
+                  trend.isRising ? 'Tăng' : 'Giảm',
+                  trend.isRising ? MonexColors.expense : MonexColors.income,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _aiSection(
+            icon: Icons.auto_graph_outlined,
+            title: 'Dự đoán chi tiêu tháng tới',
+            emptyText: 'Cần thêm lịch sử 3-6 tháng để dự đoán chắc hơn.',
+            children: report.predictions
+                .take(3)
+                .map(
+                  (item) => _aiRow(
+                    title: item.category,
+                    body:
+                        'Dự kiến ${money(item.predictedAmount)} từ ${item.sampleMonths} tháng dữ liệu.',
+                    value: item.isRisky ? 'Rủi ro' : 'Ổn',
+                    color: item.isRisky
+                        ? MonexColors.expense
+                        : MonexColors.income,
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          _aiSection(
+            icon: Icons.savings_outlined,
+            title: 'AI đề xuất ngân sách',
+            emptyText: 'Cần thêm thu nhập hoặc chi tiêu để đề xuất ngân sách.',
+            children: report.budgetRecommendations
+                .take(5)
+                .map(
+                  (item) => _aiRow(
+                    title: item.category,
+                    body:
+                        '${item.reason} Đã dùng ${money(item.currentSpent)} trong tháng này.',
+                    value: money(item.suggestedLimit),
+                    color: item.isOverSuggested
+                        ? MonexColors.expense
+                        : MonexColors.primary,
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          _aiSection(
+            icon: Icons.manage_search_outlined,
+            title: 'Giao dịch bất thường',
+            emptyText: 'Chưa có khoản nào vượt 2x trung bình danh mục 30 ngày.',
+            children: report.anomalies
+                .take(3)
+                .map(
+                  (item) => _aiRow(
+                    title: item.entry.title,
+                    body:
+                        '${item.entry.category}: ${money(item.entry.amount)} so với trung bình ${money(item.categoryAverage)}.',
+                    value: '${item.multiplier.toStringAsFixed(1)}x',
+                    color: item.multiplier >= 3
+                        ? MonexColors.expense
+                        : MonexColors.accent,
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          _aiSection(
+            icon: Icons.lightbulb_outline_rounded,
+            title: 'Gợi ý cắt giảm thông minh',
+            emptyText: 'Chưa có danh mục tăng liên tục 3 tháng.',
+            children: report.reductionSuggestions
+                .take(3)
+                .map(
+                  (item) => _aiRow(
+                    title: item.category,
+                    body: item.reason,
+                    value: '-${item.reductionPercent.toStringAsFixed(0)}%',
+                    color: MonexColors.info,
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          _aiSection(
+            icon: Icons.repeat_rounded,
+            title: 'Giao dịch lặp lại tự động',
+            emptyText: 'Chưa có khoản thu/chi định kỳ.',
+            children: appState.recurringRules
+                .take(3)
+                .map(
+                  (rule) => _aiRow(
+                    title: rule.title,
+                    body:
+                        '${rule.isIncome ? 'Thu' : 'Chi'} ${money(rule.amount)} mỗi ${rule.frequency.toLowerCase()}, kỳ tiếp theo ${shortDate(rule.nextRunDate)}.',
+                    value: rule.isIncome ? 'Thu' : 'Chi',
+                    color: rule.isIncome
+                        ? MonexColors.income
+                        : MonexColors.expense,
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Thành tích & streak',
+            style: TextStyle(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: report.achievements.map(_achievementChip).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _aiMetric(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: MonexColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _aiSection({
+    required IconData icon,
+    required String title,
+    required String emptyText,
+    required List<Widget> children,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: MonexColors.primary, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (children.isEmpty)
+          Text(
+            emptyText,
+            style: const TextStyle(
+              color: MonexColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          )
+        else
+          ...children,
+      ],
+    );
+  }
+
+  Widget _aiRow({
+    required String title,
+    required String body,
+    required String value,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  body,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: MonexColors.muted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _achievementChip(SavingsAchievement item) {
+    final color = item.level >= 3
+        ? MonexColors.income
+        : item.level == 2
+        ? MonexColors.accent
+        : MonexColors.info;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 44),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.workspace_premium_outlined, color: color, size: 18),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.title,
+                style: TextStyle(color: color, fontWeight: FontWeight.w900),
+              ),
+              SizedBox(
+                width: 220,
+                child: Text(
+                  item.subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: MonexColors.muted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendarView() {
+    final selectedReport = _dayReport(_selectedCalendarDay);
+    final selectedEntries = [...selectedReport.entries]
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: MonexTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Lịch thu chi',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            'Tổng thu/chi theo từng ngày trong tháng.',
+            style: const TextStyle(
+              color: MonexColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TableCalendar<TransactionEntry>(
+            firstDay: DateTime.utc(2020),
+            lastDay: DateTime.utc(2035, 12, 31),
+            focusedDay: _selectedMonth,
+            calendarFormat: CalendarFormat.month,
+            availableCalendarFormats: const {CalendarFormat.month: 'Tháng'},
+            selectedDayPredicate: (day) => isSameDay(day, _selectedCalendarDay),
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedCalendarDay = selectedDay;
+                _selectedMonth = DateTime(focusedDay.year, focusedDay.month);
+              });
+            },
+            onPageChanged: (focusedDay) {
+              setState(() {
+                _selectedMonth = DateTime(focusedDay.year, focusedDay.month);
+              });
+            },
+            calendarBuilders: CalendarBuilders<TransactionEntry>(
+              defaultBuilder: (context, day, focusedDay) =>
+                  _calendarDayCell(day),
+              todayBuilder: (context, day, focusedDay) =>
+                  _calendarDayCell(day, isToday: true),
+              selectedBuilder: (context, day, focusedDay) =>
+                  _calendarDayCell(day, isSelected: true),
+              outsideBuilder: (context, day, focusedDay) =>
+                  _calendarDayCell(day, isOutside: true),
+            ),
+            headerStyle: const HeaderStyle(
+              titleCentered: true,
+              formatButtonVisible: false,
+              titleTextStyle: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _comparisonTile(
+            icon: Icons.event_note_outlined,
+            title: shortDate(_selectedCalendarDay),
+            body: selectedEntries.isEmpty
+                ? 'Ngày này chưa có giao dịch.'
+                : 'Thu ${money(selectedReport.income)}, chi ${money(selectedReport.expense)} với ${selectedEntries.length} giao dịch.',
+            color: selectedReport.balance >= 0
+                ? MonexColors.income
+                : MonexColors.expense,
+          ),
+          if (selectedEntries.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ...selectedEntries.take(5).map(_transactionRow),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _calendarDayCell(
+    DateTime day, {
+    bool isSelected = false,
+    bool isToday = false,
+    bool isOutside = false,
+  }) {
+    final report = _dayReport(day);
+    final hasData = report.income > 0 || report.expense > 0;
+    final color = isSelected
+        ? MonexColors.primary
+        : isToday
+        ? MonexColors.info
+        : Colors.transparent;
+
+    return Container(
+      margin: const EdgeInsets.all(2),
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isSelected ? 0.16 : 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isSelected
+              ? MonexColors.primary
+              : hasData
+              ? MonexColors.line
+              : Colors.transparent,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '${day.day}',
+            style: TextStyle(
+              color: isOutside ? MonexColors.muted : MonexColors.ink,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          if (report.income > 0)
+            Text(
+              '+${_compactMoney(report.income)}',
+              maxLines: 1,
+              overflow: TextOverflow.clip,
+              style: const TextStyle(
+                color: MonexColors.income,
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          if (report.expense > 0)
+            Text(
+              '-${_compactMoney(report.expense)}',
+              maxLines: 1,
+              overflow: TextOverflow.clip,
+              style: const TextStyle(
+                color: MonexColors.expense,
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCard({
     required String title,
     required String subtitle,
     required Widget child,
+    List<Widget>? legends,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -394,12 +907,14 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           const SizedBox(height: 14),
           child,
           const SizedBox(height: 12),
-          const Row(
-            children: [
-              _LegendDot(color: MonexColors.income, label: 'Thu nhập'),
-              SizedBox(width: 14),
-              _LegendDot(color: MonexColors.expense, label: 'Chi tiêu'),
-            ],
+          Row(
+            children:
+                legends ??
+                const [
+                  _LegendDot(color: MonexColors.income, label: 'Thu nhập'),
+                  SizedBox(width: 14),
+                  _LegendDot(color: MonexColors.expense, label: 'Chi tiêu'),
+                ],
           ),
         ],
       ),
@@ -558,6 +1073,14 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           ],
         ),
         lineBarsData: [
+          LineChartBarData(
+            spots: _trendLineSpots(stats),
+            isCurved: false,
+            color: MonexColors.info,
+            barWidth: 2,
+            dotData: FlDotData(show: false),
+            belowBarData: BarAreaData(show: false),
+          ),
           LineChartBarData(
             spots: List.generate(
               stats.length,
@@ -878,6 +1401,15 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
   }
 
+  _PeriodReport _dayReport(DateTime day) {
+    final start = DateTime(day.year, day.month, day.day);
+    return _reportForRange(
+      start: start,
+      end: start.add(const Duration(days: 1)),
+      label: shortDate(start),
+    );
+  }
+
   List<_BucketStats> _dailyBuckets(DateTime month) {
     final days = DateTime(month.year, month.month + 1, 0).day;
     return List.generate(days, (index) {
@@ -932,6 +1464,38 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   String _deltaText(double delta) {
     if (delta == 0) return 'không đổi';
     return '${delta > 0 ? 'tăng' : 'giảm'} ${delta.abs().toStringAsFixed(1)}%';
+  }
+
+  String _percentText(double value) {
+    if (value == 0) return '0%';
+    final sign = value > 0 ? '+' : '-';
+    return '$sign${value.abs().toStringAsFixed(1)}%';
+  }
+
+  Color _deltaColor(double value) {
+    if (value > 0) return MonexColors.expense;
+    if (value < 0) return MonexColors.income;
+    return MonexColors.info;
+  }
+
+  List<FlSpot> _trendLineSpots(List<_BucketStats> stats) {
+    if (stats.isEmpty) return [];
+    final n = stats.length;
+    final avgX = (n - 1) / 2;
+    final avgY = stats.fold<double>(0, (sum, item) => sum + item.expense) / n;
+    var numerator = 0.0;
+    var denominator = 0.0;
+    for (var i = 0; i < n; i++) {
+      final dx = i - avgX;
+      numerator += dx * (stats[i].expense - avgY);
+      denominator += dx * dx;
+    }
+    final slope = denominator == 0 ? 0 : numerator / denominator;
+    final intercept = avgY - slope * avgX;
+    return List.generate(n, (index) {
+      final y = (intercept + slope * index).clamp(0, double.infinity);
+      return FlSpot(index.toDouble(), y.toDouble());
+    });
   }
 
   String _compactMoney(double value) {

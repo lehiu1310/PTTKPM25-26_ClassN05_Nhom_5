@@ -16,15 +16,62 @@ class AddTransactionPage extends StatefulWidget {
 
 class _AddTransactionPageState extends State<AddTransactionPage> {
   Future<void> _openEntryPage(Widget page, String message) async {
-    final added = await Navigator.of(
+    final result = await Navigator.of(
       context,
-    ).push<bool>(MaterialPageRoute(builder: (context) => page));
-    if (!mounted || added != true) return;
+    ).push<Object?>(MaterialPageRoute(builder: (context) => page));
+    if (!mounted || result == null || result == false) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      result is TransactionEntry
+          ? _transactionSnackBar(result)
+          : SnackBar(
+              content: Text(message),
+              behavior: SnackBarBehavior.floating,
+            ),
     );
     Navigator.of(context).pop(true);
+  }
+
+  SnackBar _transactionSnackBar(TransactionEntry entry) {
+    final color = entry.isIncome ? MonexColors.income : MonexColors.expense;
+    final title = entry.isIncome ? 'Vừa thêm thu nhập' : 'Vừa thêm chi tiêu';
+    final sign = entry.isIncome ? '+' : '-';
+
+    return SnackBar(
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 4),
+      backgroundColor: color,
+      content: Row(
+        children: [
+          Icon(
+            entry.isIncome
+                ? Icons.account_balance_wallet_outlined
+                : Icons.payments_outlined,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${entry.title} $sign${money(entry.amount)} • ${entry.category} • ${shortDate(entry.date)}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _addCategory() async {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:monex/data/app_preferences.dart';
 import 'package:monex/data/app_state.dart';
@@ -8,6 +10,7 @@ import 'package:monex/screens/pages/transactions_search_page.dart';
 import 'package:monex/screens/pages/total_salary_page.dart';
 import 'package:monex/screens/widgets/animated_money_text.dart';
 import 'package:monex/screens/widgets/skeleton_box.dart';
+import 'package:monex/services/ai_rule_service.dart';
 import 'package:monex/services/insight_service.dart';
 import 'package:monex/services/notification_service.dart';
 import 'package:monex/services/report_service.dart';
@@ -654,6 +657,18 @@ class _OverviewPageState extends State<OverviewPage> {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () {
+                    if (insight.actionType == 'pay_bill') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Đã giữ hóa đơn trong danh sách nhắc nhở.',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      return;
+                    }
+
                     final reminder = appState.addReminder(
                       title: 'Kiểm tra ngân sách',
                       amount:
@@ -671,7 +686,11 @@ class _OverviewPageState extends State<OverviewPage> {
                     );
                   },
                   icon: const Icon(Icons.alarm_add_outlined, size: 18),
-                  label: const FittedBox(child: Text('Nhắc lại')),
+                  label: FittedBox(
+                    child: Text(
+                      insight.actionType == 'pay_bill' ? 'Để sau' : 'Nhắc lại',
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: MonexColors.primary,
                     side: const BorderSide(color: MonexColors.line),
@@ -685,7 +704,12 @@ class _OverviewPageState extends State<OverviewPage> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () => _openInsightAction(context, insight),
-                  icon: const Icon(Icons.pie_chart_outline, size: 18),
+                  icon: Icon(
+                    insight.actionType == 'pay_bill'
+                        ? Icons.check_circle_outline
+                        : Icons.pie_chart_outline,
+                    size: 18,
+                  ),
                   label: FittedBox(child: Text(insight.primaryAction)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MonexColors.primary,
@@ -706,6 +730,24 @@ class _OverviewPageState extends State<OverviewPage> {
     BuildContext context,
     AssistantInsight insight,
   ) async {
+    if (insight.actionType == 'pay_bill' && insight.targetId != null) {
+      final handled = appState.markReminderPaid(insight.targetId!);
+      if (handled) {
+        unawaited(notificationService.cancelReminderById(insight.targetId!));
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            handled
+                ? 'Đã thanh toán hóa đơn, app sẽ ngừng nhắc.'
+                : 'Hóa đơn này đã được xử lý.',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     final action = insight.primaryAction.toLowerCase();
     if (action.contains('thêm')) {
       await showModalBottomSheet<bool>(
@@ -725,6 +767,10 @@ class _OverviewPageState extends State<OverviewPage> {
     }
     if (action.contains('hóa đơn')) {
       setState(() => _selectedActionIndex = 1);
+      return;
+    }
+    if (action.contains('tiết kiệm')) {
+      setState(() => _selectedActionIndex = 0);
       return;
     }
     if (action.contains('ngân sách')) {
@@ -862,17 +908,77 @@ class _OverviewPageState extends State<OverviewPage> {
           itemBuilder: (index) => _buildReminderRow(reminders[index]),
         );
       case 2:
-        final budgets = appState.budgets;
-        return _buildContentContainer(
-          title: 'Ngân sách',
-          actionText: 'Tháng này',
-          itemCount: budgets.length,
-          emptyText: 'Chưa có ngân sách',
-          itemBuilder: (index) => _buildBudgetRow(budgets[index]),
-        );
+        return _buildAiBudgetContainer();
       default:
         return const SizedBox.shrink();
     }
+  }
+
+  Widget _buildAiBudgetContainer() {
+    final recommendations = aiRuleService
+        .buildReport(appState)
+        .budgetRecommendations
+        .take(6)
+        .toList();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: MonexTheme.cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'AI đề xuất ngân sách',
+                  style: TextStyle(
+                    color: MonexColors.ink,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const Text(
+                'Theo thu/chi',
+                style: TextStyle(
+                  color: MonexColors.primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'App tự đề xuất các khoản nên phân bổ mỗi tháng dựa trên lịch sử tháng/năm và thu nhập trung bình.',
+            style: TextStyle(
+              color: MonexColors.muted,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (recommendations.isEmpty)
+            const Text(
+              'Cần thêm thu nhập hoặc chi tiêu để AI đề xuất ngân sách.',
+              style: TextStyle(
+                color: MonexColors.muted,
+                fontWeight: FontWeight.w700,
+              ),
+            )
+          else
+            ...List.generate(recommendations.length, (index) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == recommendations.length - 1 ? 0 : 14,
+                ),
+                child: _buildBudgetRecommendationRow(recommendations[index]),
+              );
+            }),
+        ],
+      ),
+    );
   }
 
   Widget _buildContentContainer({
@@ -1003,51 +1109,117 @@ class _OverviewPageState extends State<OverviewPage> {
     );
   }
 
-  Widget _buildBudgetRow(BudgetInfo budget) {
-    final progress = budget.progress.clamp(0.0, 1.0).toDouble();
+  Widget _buildBudgetRecommendationRow(BudgetRecommendation item) {
+    final color = item.isOverSuggested
+        ? MonexColors.expense
+        : _budgetRecommendationColor(item.category);
+    final progress = item.suggestedLimit <= 0
+        ? 0.0
+        : (item.currentSpent / item.suggestedLimit).clamp(0.0, 1.0).toDouble();
 
     return Row(
       children: [
-        _buildIconTile(budget.icon, budget.color),
+        _buildIconTile(_budgetRecommendationIcon(item.category), color),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildRowTitle(budget.category),
+              _buildRowTitle(item.category),
               const SizedBox(height: 4),
               Text(
-                '${money(budget.spent)} / ${money(budget.limit)}',
+                'Nên dùng ${money(item.suggestedLimit)} • đã dùng ${money(item.currentSpent)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(color: MonexColors.muted, fontSize: 12),
               ),
-            ],
-          ),
-        ),
-        SizedBox(
-          width: 48,
-          height: 48,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              CircularProgressIndicator(
-                value: progress,
-                strokeWidth: 5,
-                backgroundColor: MonexColors.line,
-                valueColor: AlwaysStoppedAnimation<Color>(budget.color),
-              ),
+              const SizedBox(height: 3),
               Text(
-                '${(budget.progress * 100).round()}%',
+                'TB tháng ${money(item.monthlyAverage)} • TB năm ${money(item.yearlyAverage)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: MonexColors.ink,
+                  color: MonexColors.muted,
                   fontSize: 11,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: MonexColors.line,
+                  color: color,
                 ),
               ),
             ],
           ),
         ),
+        const SizedBox(width: 10),
+        Container(
+          constraints: const BoxConstraints(minWidth: 58),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '${(item.incomeRatio * 100).round()}%',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  IconData _budgetRecommendationIcon(String category) {
+    final lower = category.toLowerCase();
+    if (lower.contains('thuê') || lower.contains('nhà')) {
+      return Icons.home_work_outlined;
+    }
+    if (lower.contains('ăn')) return Icons.fastfood_outlined;
+    if (lower.contains('điện thoại')) return Icons.phone_iphone_outlined;
+    if (lower.contains('điện')) return Icons.bolt_outlined;
+    if (lower.contains('nước')) return Icons.water_drop_outlined;
+    if (lower.contains('xăng') || lower.contains('xe')) {
+      return Icons.local_gas_station_outlined;
+    }
+    if (lower.contains('internet') || lower.contains('wifi')) {
+      return Icons.wifi_outlined;
+    }
+    if (lower.contains('y tế')) return Icons.local_hospital_outlined;
+    if (lower.contains('giáo')) return Icons.school_outlined;
+    if (lower.contains('giải')) return Icons.movie_outlined;
+    if (lower.contains('dự phòng')) return Icons.shield_outlined;
+    return Icons.savings_outlined;
+  }
+
+  Color _budgetRecommendationColor(String category) {
+    final lower = category.toLowerCase();
+    if (lower.contains('thuê') || lower.contains('nhà')) {
+      return const Color(0xFF6D5BD0);
+    }
+    if (lower.contains('ăn')) return MonexColors.expense;
+    if (lower.contains('điện')) return MonexColors.accent;
+    if (lower.contains('nước')) return MonexColors.info;
+    if (lower.contains('xăng') || lower.contains('giao')) {
+      return const Color(0xFF4A65D9);
+    }
+    if (lower.contains('internet') || lower.contains('điện thoại')) {
+      return const Color(0xFF147C8C);
+    }
+    if (lower.contains('y tế')) return const Color(0xFFDB4D79);
+    if (lower.contains('giáo')) return const Color(0xFF7B61FF);
+    if (lower.contains('giải')) return const Color(0xFFEF7B45);
+    if (lower.contains('dự phòng')) return MonexColors.income;
+    return MonexColors.primary;
   }
 
   Widget _buildIconTile(IconData icon, Color color) {

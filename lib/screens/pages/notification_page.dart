@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:monex/data/app_state.dart';
 import 'package:monex/screens/pages/add_transaction_page.dart';
 import 'package:monex/screens/pages/analytics_page.dart';
+import 'package:monex/screens/pages/savings_page.dart';
 import 'package:monex/screens/pages/transactions_search_page.dart';
 import 'package:monex/screens/widgets/empty_state.dart';
 import 'package:monex/services/insight_service.dart';
+import 'package:monex/services/notification_service.dart';
 import 'package:monex/theme/app_theme.dart';
 import 'package:monex/theme/monex_background.dart';
 
@@ -206,7 +210,12 @@ class _AssistantCard extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () => _openInsightTarget(context, insight),
-              icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+              icon: Icon(
+                insight.actionType == 'pay_bill'
+                    ? Icons.check_circle_outline
+                    : Icons.arrow_forward_rounded,
+                size: 18,
+              ),
               label: FittedBox(child: Text(insight.primaryAction)),
               style: ElevatedButton.styleFrom(
                 foregroundColor: MonexColors.primary,
@@ -226,6 +235,11 @@ class _AssistantCard extends StatelessWidget {
     BuildContext context,
     AssistantInsight insight,
   ) async {
+    if (insight.actionType == 'pay_bill' && insight.targetId != null) {
+      _markBillPaid(context, insight.targetId!);
+      return;
+    }
+
     final text = insight.primaryAction.toLowerCase();
     if (text.contains('thêm')) {
       await showModalBottomSheet<bool>(
@@ -241,6 +255,13 @@ class _AssistantCard extends StatelessWidget {
       Navigator.of(
         context,
       ).push(MaterialPageRoute(builder: (context) => const AnalyticsPage()));
+      return;
+    }
+
+    if (text.contains('tiết kiệm')) {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => const SavingsPage()));
       return;
     }
 
@@ -336,6 +357,23 @@ class _NotificationTile extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (item.actionType == 'pay_bill' && item.targetId != null) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _markBillPaid(context, item.targetId!),
+                      icon: const Icon(Icons.check_circle_outline, size: 18),
+                      label: const Text('Thanh toán'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: MonexColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -394,4 +432,21 @@ IconData _severityIcon(InsightSeverity severity) {
     InsightSeverity.good => Icons.check_circle_outline_rounded,
     InsightSeverity.info => Icons.auto_awesome,
   };
+}
+
+void _markBillPaid(BuildContext context, String reminderId) {
+  final handled = appState.markReminderPaid(reminderId);
+  if (handled) {
+    unawaited(notificationService.cancelReminderById(reminderId));
+  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        handled
+            ? 'Đã thanh toán hóa đơn, app sẽ ngừng nhắc.'
+            : 'Hóa đơn này đã được xử lý.',
+      ),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
 }

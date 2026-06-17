@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:monex/data/app_state.dart';
+import 'package:monex/services/notification_service.dart';
 import 'package:monex/theme/app_theme.dart';
 import 'package:monex/widgets/category_dialogs.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -20,6 +23,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   int _selectedCategoryIndex = 0;
+  bool _repeatMonthly = false;
 
   @override
   void initState() {
@@ -39,14 +43,24 @@ class _AddExpensePageState extends State<AddExpensePage> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    appState.addExpense(
+    final entry = appState.addExpense(
       title: _titleController.text,
       amount: parseMoney(_amountController.text)!,
       category: appState.expenseCategories[_selectedCategoryIndex],
       date: _selectedDay,
     );
+    unawaited(notificationService.showTransactionFeedback(appState, entry));
+    if (_repeatMonthly) {
+      appState.addRecurringTransaction(
+        type: TransactionType.expense,
+        title: _titleController.text,
+        amount: entry.amount,
+        category: entry.category,
+        startDate: _selectedDay,
+      );
+    }
 
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(entry);
   }
 
   void _selectDate(DateTime date) {
@@ -176,6 +190,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
               ),
               const SizedBox(height: 12),
               _buildCategorySelector(),
+              const SizedBox(height: 18),
+              _buildRecurringSwitch(),
               const SizedBox(height: 36),
               _buildSubmitButton(),
             ],
@@ -330,6 +346,32 @@ class _AddExpensePageState extends State<AddExpensePage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildRecurringSwitch() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: MonexTheme.cardDecoration(radius: 16),
+      child: SwitchListTile.adaptive(
+        value: _repeatMonthly,
+        onChanged: (value) => setState(() => _repeatMonthly = value),
+        contentPadding: EdgeInsets.zero,
+        activeThumbColor: MonexColors.expense,
+        activeTrackColor: MonexColors.expense.withValues(alpha: 0.22),
+        secondary: const Icon(Icons.repeat_rounded, color: MonexColors.expense),
+        title: const Text(
+          'Lặp lại hàng tháng',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+        subtitle: const Text(
+          'Phù hợp với tiền nhà, điện nước hoặc khoản chi cố định.',
+          style: TextStyle(
+            color: MonexColors.muted,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 
