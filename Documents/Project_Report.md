@@ -23,10 +23,10 @@ Nguoi dung thuong kho theo doi tien vao, tien ra, cac khoan can tiet kiem va hoa
 
 Ung dung su dung Flutter, chia thanh cac nhom:
 
-- `SRC/monex/lib/data`: model va AppState.
-- `SRC/monex/lib/screens`: cac man hinh giao dien.
-- `SRC/monex/lib/services`: thong bao, bao cao, home widget, insight.
-- `SRC/monex/lib/theme`: mau sac, theme, background.
+- `lib/data`: model va AppState.
+- `lib/screens`: cac man hinh giao dien.
+- `lib/services`: thong bao, bao cao, home widget, insight.
+- `lib/theme`: mau sac, theme, background.
 
 ## 5. Kiem Thu
 

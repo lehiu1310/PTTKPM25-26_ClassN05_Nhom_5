@@ -1,78 +1,81 @@
-# Monex - Quản Lý Tài Chính Cá Nhân
+# Monex - Quan Ly Tai Chinh Ca Nhan
 
-Repository bài tập lớn môn phân tích và thiết kế phần mềm
+Repository bai tap lon hoc phan Phan tich va thiet ke phan mem.
 
-## Cấu Trúc Theo Yêu Cầu
+## Cau Truc Theo Yeu Cau
 
 ```text
 Quan-Ly-Tai-Chinh-Monex/
 |-- Documents/      # Ke hoach, SRS, bao cao hang tuan, bao cao du an
 |-- Design/         # Thiet ke kien truc, chuong trinh, du lieu, sketch
-|-- SRC/            # Source code chuong trinh
+|-- android/        # Cau hinh Android
+|-- lib/            # Source Dart/Flutter
+|-- test/           # Kiem thu
 |-- CHANGELOG.md    # Lich su thay doi
 `-- README.md       # Thong tin du an
 ```
 
-## Thông Tin Dự Án
+## Thong Tin Du An
 
-- Tên dự án: Monex - Quan ly tai chinh ca nhan
-- Nền tảng: Android
+- Ten du an: Monex - Quan ly tai chinh ca nhan
+- Nen tang: Android
 - Framework: Flutter
-- Ngôn ngữ: Dart
-- Lưu trữ dữ liệu: SharedPreferences
+- Ngon ngu: Dart
+- Luu tru du lieu: SharedPreferences
 - IDE: Android Studio
 
-## Chức Năng Chính
+## Chuc Nang Chinh
 
-- Đăng ký, đăng nhập, đăng xuất tài khỏan.
-- Tách dữ liệu thu chi theo từng tài khỏan.
-- Thêm thu nhập, chi phí, danh mục và ngày giao dịch.
-- Nhập giao dịch của tháng trước/năm trước.
-- Thống kê theo tháng và năm, không cộng dồn sai giữa các tháng.
-- Quản lý tiết kiệm theo mục tiêu, nạp/rút tiền nhiều lần.
-- Tạo hóa đơn, lời nhắc và thông báo cục bộ.
-- Trợ lý AI chi tiêu dựa trên dữ liệu thực.
-- Xuất báo cáo PDF/Excel.
+- Dang ky, dang nhap, dang xuat tai khoan.
+- Tach du lieu thu chi theo tung tai khoan.
+- Them thu nhap, chi phi, danh muc va ngay giao dich.
+- Nhap giao dich cua thang truoc/nam truoc.
+- Thong ke theo thang va nam, khong cong don sai giua cac thang.
+- Quan ly tiet kiem theo muc tieu, nap/rut tien nhieu lan.
+- Tao hoa don, loi nhac va thong bao cuc bo.
+- Tro ly chi tieu dua tren du lieu thuc va AI Rule.
+- Goi y ngan sach theo lich su thu chi.
+- Xuat bao cao PDF/Excel o muc demo.
 
 ## Source Code
 
-Source Flutter nằm tại:
+Source Flutter nam tai thu muc goc repository:
 
 ```text
-SRC/monex
+D:\HOC_TAP\quan_ly_tai_chinh\monex
 ```
 
-Mở project bằng Android Studio tại thư mục:
+Mo project bang Android Studio tai thu muc:
 
 ```text
-D:\HOC_TAP\quan_ly_tai_chinh\monex\SRC\monex
+D:\HOC_TAP\quan_ly_tai_chinh\monex
 ```
 
-Không mở thu mục cha `D:\HOC_TAP\quan_ly_tai_chinh\monex` nếu muốn chạy app, vì thư mục cha chỉ là repository tổng hợp tài liệu + source.
+Day la thu muc app Flutter truc tiep, co `pubspec.yaml`, `lib/` va `android/`.
 
-## Chạy App
+## Chay App
 
 Trong Android Studio:
 
 1. File -> Open.
-2. Chọn `D:\HOC_TAP\quan_ly_tai_chinh\monex\SRC\monex`.
-3. Chọn Android Emulator.
-4. Bấm Run.
+2. Chon `D:\HOC_TAP\quan_ly_tai_chinh\monex`.
+3. Chon Android Emulator.
+4. Bam Run.
 
-Hoặc build debug bằng Gradle:
+Hoac build debug bang Gradle:
 
 ```powershell
-cd D:\HOC_TAP\quan_ly_tai_chinh\monex\SRC\monex\android
+cd D:\HOC_TAP\quan_ly_tai_chinh\monex\android
 .\gradlew.bat :app:assembleDebug -Ptarget-platform=android-x64 --no-daemon
 ```
 
 APK debug sau khi build:
 
 ```text
-SRC/monex/build/app/outputs/flutter-apk/app-debug.apk
+build/app/outputs/flutter-apk/app-debug.apk
 ```
 
-## Tài Khoản Demo
+## Tai Khoan Demo
 
 ```text
 Username: minh
@@ -80,17 +83,19 @@ Email: minh@monex.vn
 Password: 123456
 ```
 
-## Tài Liệu
+## Tai Lieu
 
-- Kế hoạch dự án: `Documents/Project_Plan.md`
+- Ke hoach du an: `Documents/Project_Plan.md`
 - SRS: `Documents/SRS.md`
-- Báo cáo hàng tuan: `Documents/Weekly_Report.md`
-- Báo cáo dự án: `Documents/Project_Report.md`
-- Báo cáo PDF: `Documents/Bao_cao_Monex.pdf`
-- Thiết kế kiến trúc: `Design/Architecture.md`
-- Thiết kế chương trình: `Design/Program_Design.md`
-- Thiết kế dữ liệu: `Design/Data_Design.md`
+- Bao cao hang tuan: `Documents/Weekly_Report.md`
+- Bao cao du an: `Documents/Project_Report.md`
+- Bao cao hoc phan: `Documents/Baocao_Monex.docx`
+- Thiet ke kien truc: `Design/Architecture.md`
+- Thiet ke chuong trinh: `Design/Program_Design.md`
+- Thiet ke du lieu: `Design/Data_Design.md`
 
-## Ghi Chú Git
+## Ghi Chu Git
 
-- Các thư mục build/cache như `.runtime`, `.dart_tool`, `build` không đưa lên GitHub.
+- Cac thu muc build/cache nhu `.runtime`, `.dart_tool`, `build` khong dua len GitHub.
+- File/thu muc khong phuc vu yeu cau hoc phan da duoc loai khoi Git de repository gon hon.
+- Giang vien se duoc chu repository add vao GitHub theo yeu cau rieng.

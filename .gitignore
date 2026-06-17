@@ -38,6 +38,7 @@ SRC/monex/.dart_tool/
 SRC/monex/.flutter-plugins
 SRC/monex/.flutter-plugins-dependencies
 SRC/monex/.pub/
+/SRC/monex/
 
 # Symbolication related
 app.*.symbols

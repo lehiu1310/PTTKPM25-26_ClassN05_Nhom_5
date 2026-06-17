@@ -29,7 +29,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 
 
 PROJECT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-REPO_DIR = os.path.abspath(os.path.join(PROJECT_DIR, "..", ".."))
+REPO_DIR = PROJECT_DIR
 OUTPUT_DIR = os.path.join(REPO_DIR, "Documents")
 OUTPUT_PATH = os.path.join(OUTPUT_DIR, "Bao_cao_Monex.pdf")
 

@@ -10,8 +10,8 @@ UI Layer -> AppState -> Local Storage/Services
 
 ## 2. Thanh Phan Chinh
 
-- UI Layer: cac man hinh trong `SRC/monex/lib/screens`.
-- State Layer: `MonexAppState` trong `SRC/monex/lib/data/app_state.dart`.
+- UI Layer: cac man hinh trong `lib/screens`.
+- State Layer: `MonexAppState` trong `lib/data/app_state.dart`.
 - Service Layer: notification, report, insight, home widget.
 - Storage: SharedPreferences.
 

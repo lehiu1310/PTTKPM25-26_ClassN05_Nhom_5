@@ -2,7 +2,7 @@
 setlocal
 
 set "PROJECT_DIR=%~dp0.."
-for %%i in ("%PROJECT_DIR%\..\..") do set "REPO_DIR=%%~fi"
+for %%i in ("%PROJECT_DIR%") do set "REPO_DIR=%%~fi"
 pushd "%PROJECT_DIR%"
 
 set "APPDATA=%REPO_DIR%\.runtime\appdata"
@@ -29,7 +29,25 @@ if errorlevel 1 (
   exit /b 1
 )
 
-"%FLUTTER_ROOT%\bin\cache\dart-sdk\bin\dart.exe" analyze lib
+pushd "%PROJECT_DIR%\android"
+call gradlew.bat :app:assembleDebug -Ptarget-platform=android-x64 --no-daemon
+if errorlevel 1 (
+  popd
+  popd
+  endlocal
+  exit /b 1
+)
+popd
+
+"%ANDROID_HOME%\platform-tools\adb.exe" install -r "%PROJECT_DIR%\build\app\outputs\flutter-apk\app-debug.apk"
+if errorlevel 1 (
+  popd
+  endlocal
+  exit /b 1
+)
+
+"%ANDROID_HOME%\platform-tools\adb.exe" shell am force-stop com.example.monex
+"%ANDROID_HOME%\platform-tools\adb.exe" shell monkey -p com.example.monex 1
 
 popd
 endlocal

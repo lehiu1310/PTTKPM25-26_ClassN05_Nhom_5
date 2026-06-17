@@ -1,22 +1,23 @@
 # SRC
 
-Thu muc nay chua source code chuong trinh theo yeu cau hoc phan.
+Thu muc nay dung de ghi chu phan source code theo yeu cau hoc phan.
+
+De tien mo bang Android Studio, source Flutter Android project hien nam truc tiep o thu muc goc repository:
 
 ```text
-SRC/
-`-- monex/       # Flutter Android project
+D:\HOC_TAP\quan_ly_tai_chinh\monex
 ```
 
 Cac thanh phan chinh:
 
-- `monex/lib/`: source Dart/Flutter.
-- `monex/android/`: cau hinh Android.
-- `monex/pubspec.yaml`: dependency Flutter.
-- `monex/test/`: test.
-- `monex/tools/`: script ho tro build/analyze tren o D.
+- `lib/`: source Dart/Flutter.
+- `android/`: cau hinh Android.
+- `pubspec.yaml`: dependency Flutter.
+- `test/`: test.
+- `tools/`: script ho tro build/analyze tren o D.
 
 Khi chay app bang Android Studio, mo thu muc:
 
 ```text
-SRC/monex
+D:\HOC_TAP\quan_ly_tai_chinh\monex
 ```

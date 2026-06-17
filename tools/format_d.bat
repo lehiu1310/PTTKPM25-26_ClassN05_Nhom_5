@@ -2,7 +2,7 @@
 setlocal
 
 set "PROJECT_DIR=%~dp0.."
-for %%i in ("%PROJECT_DIR%\..\..") do set "REPO_DIR=%%~fi"
+for %%i in ("%PROJECT_DIR%") do set "REPO_DIR=%%~fi"
 pushd "%PROJECT_DIR%"
 
 set "APPDATA=%REPO_DIR%\.runtime\appdata"

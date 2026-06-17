@@ -2,7 +2,7 @@
 setlocal
 
 set "PROJECT_DIR=%~dp0.."
-for %%i in ("%PROJECT_DIR%\..\..") do set "REPO_DIR=%%~fi"
+for %%i in ("%PROJECT_DIR%") do set "REPO_DIR=%%~fi"
 set "ANDROID_HOME=%REPO_DIR%\.runtime\android-sdk"
 set "ANDROID_SDK_ROOT=%ANDROID_HOME%"
 set "ANDROID_AVD_HOME=%REPO_DIR%\.runtime\avd"

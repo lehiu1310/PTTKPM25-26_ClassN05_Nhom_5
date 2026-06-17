@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-06-05
+
+- Chuyen lai Flutter Android project ve thu muc goc `monex` de mo truc tiep bang Android Studio.
+- Cap nhat README, tai lieu va script build/analyze theo duong dan moi.
+
 ## 2026-06-04
 
 - Don gon GitHub repository: dua Flutter Android project vao `SRC/monex`.
